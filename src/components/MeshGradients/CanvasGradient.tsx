@@ -36,7 +36,8 @@ export const FullScreenGradient: React.FC = () => {
             wireframe: false,
             colorBlending: 6,
             backgroundAlpha: 0,
-            resolution: 1 / 2
+            resolution: 1 / 3,
+            grainIntensity: 0,
         });
 
         return gradientRef.current.destroy;

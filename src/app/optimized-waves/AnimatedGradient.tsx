@@ -1,11 +1,14 @@
 "use client"
 
+import { useRouter } from 'next/navigation';
 import styles from './AnimatedGradient.module.css';
 import { useEffect, useState } from 'react';
+import { LastFMTrack } from 'lastfm-ts-api';
 
 interface AnimatedGradientProps {
     colors?: [string, string, string, string, string];
     className?: string;
+    track: LastFMTrack;
     randomize?: boolean;
 }
 
@@ -29,6 +32,7 @@ export function AnimatedGradient({
         'hsla(331, 80%, 52%, 1)'
     ],
     className,
+    track,
     randomize = false
 }: AnimatedGradientProps) {
     const [colors, setColors] = useState(initialColors);
@@ -48,6 +52,16 @@ export function AnimatedGradient({
             radial-gradient(circle at var(--x-4) var(--y-4), ${colors[4]} var(--s-start-4), transparent var(--s-end-4))
         `
     };
+
+    const router = useRouter();
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        router.refresh();
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }, [router]);
 
     return (
         <div 
