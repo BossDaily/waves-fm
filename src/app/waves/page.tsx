@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { FullScreenGradient } from "@/components/MeshGradients/CanvasGradient";
 
-import { LastFMTrack, LastFMUser } from "lastfm-ts-api";
+import { LastFMUser } from "lastfm-ts-api";
 export default async function OptimizedWavesPage() {
   const user = new LastFMUser(`${process.env.NEXT_PUBLIC_LASTFM}`);
   const tracks = await user.getRecentTracks({

@@ -10,6 +10,7 @@ interface FullScreenGradientProps {
   track: any;
 }
 
+// helper function to generate random hex colors
 const getRandomHexColor = () => {
   return (
     "#" +
@@ -19,12 +20,14 @@ const getRandomHexColor = () => {
   );
 };
 
+// convert rgb values to hex color string
 const rgbToHex = (r: number, g: number, b: number): string => {
   return '#' + [r, g, b]
     .map(x => x.toString(16).padStart(2, '0'))
     .join('');
 };
 
+// generate a consistent hash from a string
 const hashString = (str: string): number => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -35,24 +38,29 @@ const hashString = (str: string): number => {
   return Math.abs(hash);
 };
 
+// extract a normalized parameter value from a hash at a specific index
 const getParameterFromHash = (hash: number, index: number, min: number, max: number): number => {
   const value = ((hash >> (index * 8)) & 0xFF) / 255;
   return min + (value * (max - min));
 };
 
 export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track }) => {
+  // refs for canvas and gradient instances
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const gradientRef = useRef<NeatGradient | null>(null);
   const router = useRouter();
 
+  // extract album name from track data
   const albumName = track?.album['#text'];
 
+  // extract color palette from album artwork
   const { palette } = useColorThief(track?.image[3]['#text'], {
     format: 'rgb',
     colorCount: 5,
     quality: 1,
   });
 
+  // auto refresh effect to update current track
   useEffect(() => {
     const interval = setInterval(() => {
         router.refresh();
@@ -60,9 +68,11 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
     return () => clearInterval(interval);
 }, [router]);
 
+  // initialize and update gradient effect
   useEffect(() => {
     if (!canvasRef.current || !albumName) return;
 
+    // generate consistent parameters based on album name
     const hash = hashString(albumName);
     
     const parameters = {
@@ -74,6 +84,7 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
       waveAmplitude: getParameterFromHash(hash, 5, 2, 5),
     };
 
+    // prepare color array from palette or generate random colors
     const colors = palette
       ? palette.filter((color): color is [number, number, number] => color !== null)
         .map((color) => ({
@@ -85,6 +96,7 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
           enabled: true
         }));
 
+    // initialize gradient with extracted colors and parameters
     gradientRef.current = new NeatGradient({
       ref: canvasRef.current,
       colors,
@@ -103,11 +115,14 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
       backgroundAlpha: 0,
       resolution: 1 / 3,
       grainIntensity: 0,
+      
     });
 
+    // cleanup gradient on unmount
     return gradientRef.current.destroy;
   }, [canvasRef.current, palette, albumName]);
 
+  // render fullscreen canvas
   return (
     <canvas
       style={{
