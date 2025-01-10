@@ -52,7 +52,8 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
     if (!canvasRef.current) return;
 
     const colors = palette
-      ? palette.map((color: [number, number, number]) => ({
+      ? palette.filter((color): color is [number, number, number] => color !== null)
+        .map((color) => ({
           color: rgbToHex(color[0], color[1], color[2]),
           enabled: true
         }))
