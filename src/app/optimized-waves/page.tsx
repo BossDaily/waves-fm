@@ -5,9 +5,9 @@ import { AnimatedGradient } from "./AnimatedGradient";
 import { LastFMUser } from "lastfm-ts-api";
 
 export default async function OptimizedWavesPage() {
-  const user = new LastFMUser(`${process.env.LASTFM}`);
+  const user = new LastFMUser(`${process.env.NEXT_PUBLIC_LASTFM}`);
   const tracks = await user.getRecentTracks({
-    user: `${process.env.LASTFM_USERS?.split(",")[0]}`,
+    user: `${process.env.NEXT_PUBLIC_LASTFM_USERS?.split(",")[0]}`,
   });
 
   return (
