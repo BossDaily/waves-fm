@@ -9,6 +9,7 @@ import useColorThief from 'use-color-thief';
 interface AnimatedGradientProps {
     colors?: [string, string, string, string, string];
     className?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     track: any;
     randomize?: boolean;
 }
