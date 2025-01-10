@@ -29,8 +29,8 @@ export async function generateMetadata(
     description: `Currently playing: ${currentTrack.name} by ${currentTrack.artist["#text"]} from the album ${currentTrack.album["#text"]}`,
     openGraph: {
       images: [currentTrack.image[3]["#text"], ...previousImages],
-      title: currentTrack.name,
-      description: `By ${currentTrack.artist["#text"]}`,
+      title: `Generated animated waves from the song: ${currentTrack.name}`,
+      description: `By ${currentTrack.artist["#text"]} on the album ${currentTrack.album["#text"]}`,
     },
     icons: {
       icon: [
