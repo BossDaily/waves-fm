@@ -5,7 +5,6 @@ import { NeatGradient } from "@firecms/neat";
 import useColorThief from 'use-color-thief';
 import { useRouter } from 'next/navigation';
 
-
 interface FullScreenGradientProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   track: any;
@@ -26,6 +25,21 @@ const rgbToHex = (r: number, g: number, b: number): string => {
     .join('');
 };
 
+const hashString = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+};
+
+const getParameterFromHash = (hash: number, index: number, min: number, max: number): number => {
+  const value = ((hash >> (index * 8)) & 0xFF) / 255;
+  return min + (value * (max - min));
+};
+
 export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const gradientRef = useRef<NeatGradient | null>(null);
@@ -39,8 +53,6 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
     quality: 1,
   });
 
-
-
   useEffect(() => {
     const interval = setInterval(() => {
         router.refresh();
@@ -49,7 +61,18 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
 }, [router]);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !albumName) return;
+
+    const hash = hashString(albumName);
+    
+    const parameters = {
+      speed: getParameterFromHash(hash, 0, 1, 5),
+      horizontalPressure: getParameterFromHash(hash, 1, 2, 5),
+      verticalPressure: getParameterFromHash(hash, 2, 2, 5),
+      waveFrequencyX: getParameterFromHash(hash, 3, 1, 5),
+      waveFrequencyY: getParameterFromHash(hash, 4, 1, 5),
+      waveAmplitude: getParameterFromHash(hash, 5, 2, 5),
+    };
 
     const colors = palette
       ? palette.filter((color): color is [number, number, number] => color !== null)
@@ -65,12 +88,12 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
     gradientRef.current = new NeatGradient({
       ref: canvasRef.current,
       colors,
-      speed: 4,
-      horizontalPressure: 4,
-      verticalPressure: 5,
-      waveFrequencyX: 2,
-      waveFrequencyY: 3,
-      waveAmplitude: 5,
+      speed: parameters.speed,
+      horizontalPressure: parameters.horizontalPressure,
+      verticalPressure: parameters.verticalPressure,
+      waveFrequencyX: parameters.waveFrequencyX,
+      waveFrequencyY: parameters.waveFrequencyY,
+      waveAmplitude: parameters.waveAmplitude,
       shadows: 0,
       highlights: 1,
       colorSaturation: 0,
@@ -83,7 +106,7 @@ export const FullScreenGradient: React.FC<FullScreenGradientProps> = ({ track })
     });
 
     return gradientRef.current.destroy;
-  }, [canvasRef.current, palette]);
+  }, [canvasRef.current, palette, albumName]);
 
   return (
     <canvas
