@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic'
+
+
 import { AnimatedGradient } from "./AnimatedGradient";
 import { LastFMUser } from "lastfm-ts-api";
 
