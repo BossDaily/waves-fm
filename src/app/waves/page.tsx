@@ -2,10 +2,32 @@ export const dynamic = "force-dynamic";
 
 import { FullScreenGradient } from "@/app/waves/CanvasGradient";
 import { LastFMUser } from "lastfm-ts-api";
-import type { Metadata, ResolvingMetadata } from 'next';
+import type { Metadata, ResolvingMetadata, Viewport } from 'next';
+import { Vibrant } from "node-vibrant/node";
+
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export async function generateViewport(
+  { searchParams }: Props
+): Promise<Viewport> {
+  const params = await searchParams;
+  const finalApiKey = params.apiKey as string || process.env.NEXT_PUBLIC_LASTFM;
+  const finalUsername = params.username as string || process.env.NEXT_PUBLIC_LASTFM_USERS?.split(",")[0];
+
+  const user = new LastFMUser(`${finalApiKey}`);
+  const tracks = await user.getRecentTracks({
+    user: `${finalUsername}`,
+  });
+
+  const albumCoverUrl = tracks.recenttracks.track[0].image[3]["#text"];
+  const themeColor = await Vibrant.from(albumCoverUrl).getPalette().then(palette => palette.Vibrant?.hex || "#000000");
+
+  return {
+    themeColor,
+  };
 }
 
 export async function generateMetadata(
