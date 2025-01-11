@@ -1,7 +1,11 @@
 import { LastFmForm } from "@/components/LastFmForm";
 import { WavyBackground } from "@/components/ui/wavy-background";
 import { cn, getRandomHexColor } from "@/lib/utils";
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
+
+import { Vibrant } from "node-vibrant/node";
+import { headers } from "next/headers";
+
 //import Image from "next/image";
 
 const colors = [
@@ -12,51 +16,75 @@ const colors = [
   getRandomHexColor(),
 ];
 
+const exampleNum = Math.floor(Math.random() * 12) + 1;
+
+export async function generateViewport(): Promise<Viewport> {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+  const baseUrl = `${protocol}://${host}`;
+
+  const themeColor = await Vibrant.from(
+    `${baseUrl}/examples/example${exampleNum}.png`
+  )
+    .getPalette()
+    .then((palette) => palette.Vibrant?.hex || "#000000");
+
+  return {
+    themeColor,
+  };
+}
 
 export const metadata: Metadata = {
   title: "Waves.FM",
   description: "Generate animated waves from your Last.fm scrobbles",
-  themeColor: colors[0],
   openGraph: {
     images: [
       {
-        url: `/examples/example${Math.floor(Math.random() * 11) + 1}.png`,
+        url: `/examples/example${exampleNum}.png`,
         width: 800,
         height: 600,
-        alt: "Waves.FM"
-      }
+        alt: "Waves.FM",
+      },
     ],
     title: "Waves.FM",
-    description: "Generate animated waves from your Last.fm scrobbles"
+    description: "Generate animated waves from your Last.fm scrobbles",
   },
   icons: {
     icon: [
       {
-        url: `/api/favicon?${colors.map((c, i) => `c${i + 1}=${encodeURIComponent(c)}`).join('&')}`,
+        url: `/api/favicon?${colors
+          .map((c, i) => `c${i + 1}=${encodeURIComponent(c)}`)
+          .join("&")}`,
         sizes: "32x32",
-        type: "image/png"
+        type: "image/png",
       },
       {
-        url: `/api/favicon?${colors.map((c, i) => `c${i + 1}=${encodeURIComponent(c)}`).join('&')}`,
+        url: `/api/favicon?${colors
+          .map((c, i) => `c${i + 1}=${encodeURIComponent(c)}`)
+          .join("&")}`,
         sizes: "16x16",
-        type: "image/png"
-      }
+        type: "image/png",
+      },
     ],
     apple: [
       {
-        url: `/api/favicon?${colors.map((c, i) => `c${i + 1}=${encodeURIComponent(c)}`).join('&')}`,
+        url: `/api/favicon?${colors
+          .map((c, i) => `c${i + 1}=${encodeURIComponent(c)}`)
+          .join("&")}`,
         sizes: "180x180",
-        type: "image/png"
-      }
+        type: "image/png",
+      },
     ],
     other: [
       {
         rel: "mask-icon",
-        url: `/api/favicon?${colors.map((c, i) => `c${i + 1}=${encodeURIComponent(c)}`).join('&')}`
-      }
-    ]
-  }
-
+        url: `/api/favicon?${colors
+          .map((c, i) => `c${i + 1}=${encodeURIComponent(c)}`)
+          .join("&")}`,
+      },
+    ],
+  },
 };
 export default function Home() {
   return (
