@@ -17,6 +17,18 @@ export const metadata: Metadata = {
   title: "Waves.FM",
   description: "Generate animated waves from your Last.fm scrobbles",
   themeColor: colors[0],
+  openGraph: {
+    images: [
+      {
+        url: `/examples/example${Math.floor(Math.random() * 11) + 1}.png`,
+        width: 800,
+        height: 600,
+        alt: "Waves.FM"
+      }
+    ],
+    title: "Waves.FM",
+    description: "Generate animated waves from your Last.fm scrobbles"
+  },
   icons: {
     icon: [
       {
