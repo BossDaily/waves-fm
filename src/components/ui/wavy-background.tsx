@@ -48,6 +48,15 @@ export const WavyBackground = ({
     }
   };
 
+  const getRandomHexColor = () => {
+    return (
+      "#" +
+      Math.floor(Math.random() * 16777215)
+        .toString(16)
+        .padStart(6, "0")
+    );
+  };
+
   const init = () => {
     canvas = canvasRef.current;
     ctx = canvas.getContext("2d");
@@ -64,11 +73,11 @@ export const WavyBackground = ({
   };
 
   const waveColors = colors ?? [
-    "#38bdf8",
-    "#818cf8",
-    "#c084fc",
-    "#e879f9",
-    "#22d3ee",
+    getRandomHexColor(),
+    getRandomHexColor(),
+    getRandomHexColor(),
+    getRandomHexColor(),
+    getRandomHexColor(),  
   ];
   const drawWave = (n: number) => {
     nt += getSpeed();

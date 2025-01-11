@@ -4,21 +4,12 @@ import React, { useEffect, useRef } from "react";
 import { NeatGradient } from "@firecms/neat";
 import useColorThief from 'use-color-thief';
 import { useRouter } from 'next/navigation';
+import { getRandomHexColor } from "@/lib/utils";
 
 interface FullScreenGradientProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   track: any;
 }
-
-// helper function to generate random hex colors
-const getRandomHexColor = () => {
-  return (
-    "#" +
-    Math.floor(Math.random() * 16777215)
-      .toString(16)
-      .padStart(6, "0")
-  );
-};
 
 // convert rgb values to hex color string
 const rgbToHex = (r: number, g: number, b: number): string => {

@@ -1,9 +1,13 @@
 import { LastFmForm } from "@/components/LastFmForm";
 import { WavyBackground } from "@/components/ui/wavy-background";
-import { cn } from "@/lib/utils";
+import { cn, getRandomHexColor } from "@/lib/utils";
 //import Image from "next/image";
 
+const colors = [getRandomHexColor(), getRandomHexColor(), getRandomHexColor(), getRandomHexColor(), getRandomHexColor()];
+
+
 export default function Home() {
+  
   return (
     <div
       className={cn(
@@ -12,7 +16,7 @@ export default function Home() {
       )}
     >
       <main className="flex flex-col gap-8 row-start-2 items-start sm:items-center">
-        <WavyBackground className="flex flex-col items-center gap-4">
+        <WavyBackground className="flex flex-col items-center gap-4" colors={colors}>
           <p className="text-2xl md:text-4xl lg:text-7xl text-white font-bold inter-var text-center">
             Waves.FM
           </p>
