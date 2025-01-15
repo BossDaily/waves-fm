@@ -1,10 +1,10 @@
-# Waves.FM 🌊
+# Waves.FM <img src="https://wallpaper.bossdaily.dev/api/favicon?c1=%23e4a853&c2=%23f45d87&c3=%2342d9e8&c4=%237b2fd1&c5=%23ff9b4a" width="36" height="36" />
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.1.4-black?style=flat-square)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
-Generate beautiful animated wave visualizations from your Last.fm scrobbles in real-time.
+Generate beautiful animated wave visualizations from your Last.fm scrobbles in real-time. This can be used as a dynamic wallpaper or a visualizer for your music player.
 
 ![Example Visualization](/public/examples/example4.png)
 ![Example Visualization](/public/examples/example2.png)
@@ -60,6 +60,8 @@ Visit `http://localhost:3000` to see your visualization!
 2. Enter your Last.fm API key and username
 3. Toggle the "Use Optimized Version" switch if you want better performance
 4. Click "View Visualizer" to see your current track visualization
+
+Note, you can just go to `/optimized-waves` or `/waves` to see the visualizer directly using the api key added to the `env`.
 
 ## 🛠️ Technologies
 
