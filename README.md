@@ -6,7 +6,7 @@
 
 Generate beautiful animated wave visualizations from your Last.fm scrobbles in real-time.
 
-![Example Visualization](/public/examples/example1.png)
+![Example Visualization](/public/examples/example4.png)
 ![Example Visualization](/public/examples/example2.png)
 
 ## ✨ Features
@@ -66,6 +66,8 @@ Visit `http://localhost:3000` to see your visualization!
 - [Next.js](https://nextjs.org/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
+- [Neat](https://github.com/firecmsco/neat) (for the waves)
+- [MSHR](https://www.mshr.app/)
 - [Last.fm API](https://www.last.fm/api)
 - [Node Vibrant](https://github.com/Vibrant-Colors/node-vibrant)
 - [React Hook Form](https://react-hook-form.com/)
@@ -93,4 +95,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Made with ❤️ using Next.js and Last.FM API 
+Made with ❤️ using Next.js and the Last.FM API 
