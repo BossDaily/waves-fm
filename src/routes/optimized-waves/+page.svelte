@@ -16,5 +16,9 @@
 </svelte:head>
 
 <main class="min-h-screen relative">
-	<AnimatedGradient track={data.track} randomize={true} />
+	<AnimatedGradient track={data.track} randomize={false} />
+	<!-- Debug info to ensure the page is loading -->
+	<div class="absolute top-4 left-4 z-50 text-white bg-black bg-opacity-50 p-2 rounded">
+		Track: {data.track.name} by {data.track.artist['#text']}
+	</div>
 </main>

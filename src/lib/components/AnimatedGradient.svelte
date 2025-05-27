@@ -187,35 +187,62 @@
 			clearInterval(refreshInterval);
 		}
 	});
-
 	const gradientStyle = $derived({
 		backgroundColor,
 		backgroundImage: `
-			radial-gradient(circle at var(--x-0) var(--y-0), ${colors[0]} var(--s-start-0), transparent var(--s-end-0)),
-			radial-gradient(circle at var(--x-1) var(--y-1), ${colors[1]} var(--s-start-1), transparent var(--s-end-1)),
-			radial-gradient(circle at var(--x-2) var(--y-2), ${colors[2]} var(--s-start-2), transparent var(--s-end-2)),
-			radial-gradient(circle at var(--x-3) var(--y-3), ${colors[3]} var(--s-start-3), transparent var(--s-end-3)),
-			radial-gradient(circle at var(--x-4) var(--y-4), ${colors[4]} var(--s-start-4), transparent var(--s-end-4))
+			radial-gradient(circle at var(--x-0, 40%) var(--y-0, 20%), ${colors[0]} var(--s-start-0, 0%), transparent var(--s-end-0, 50%)),
+			radial-gradient(circle at var(--x-1, 80%) var(--y-1, 0%), ${colors[1]} var(--s-start-1, 0%), transparent var(--s-end-1, 50%)),
+			radial-gradient(circle at var(--x-2, 0%) var(--y-2, 50%), ${colors[2]} var(--s-start-2, 0%), transparent var(--s-end-2, 50%)),
+			radial-gradient(circle at var(--x-3, 80%) var(--y-3, 50%), ${colors[3]} var(--s-start-3, 0%), transparent var(--s-end-3, 50%)),
+			radial-gradient(circle at var(--x-4, 0%) var(--y-4, 100%), ${colors[4]} var(--s-start-4, 0%), transparent var(--s-end-4, 50%))
 		`
+	});
+
+	// Debug logging
+	$effect(() => {
+		console.log('AnimatedGradient - colors:', colors);
+		console.log('AnimatedGradient - backgroundColor:', backgroundColor);
+		console.log('AnimatedGradient - gradientStyle:', gradientStyle);
 	});
 </script>
 
 <div 
 	class="gradient-container {className || ''}"
 	style="{Object.entries(gradientStyle).map(([key, value]) => `${key}: ${value}`).join('; ')}"
+	data-colors="{JSON.stringify(colors)}"
+	data-background="{backgroundColor}"
 ></div>
 
 <style>
 	@import "../styles/AnimatedGradient.css";
-	
 	.gradient-container {
 		width: 100vw;
 		height: 100vh;
 		position: fixed;
 		top: 0;
 		left: 0;
-		z-index: -1;
+		z-index: 1;
 		background-blend-mode: normal, normal, normal, normal, normal;
 		animation: hero-gradient-animation 15s linear infinite alternate;
+		
+		/* Fallback gradient in case CSS variables don't work */
+		background: radial-gradient(circle at 40% 20%, hsla(328, 64%, 68%, 0.8) 0%, transparent 50%),
+					radial-gradient(circle at 80% 0%, hsla(328, 84%, 92%, 0.8) 0%, transparent 50%),
+					radial-gradient(circle at 0% 50%, hsla(303, 73%, 68%, 0.8) 0%, transparent 50%),
+					radial-gradient(circle at 80% 50%, hsla(273, 58%, 78%, 0.8) 0%, transparent 50%),
+					radial-gradient(circle at 0% 100%, hsla(331, 80%, 52%, 0.8) 0%, transparent 50%);
+	}
+	
+	/* Test styles to ensure visibility */
+	.gradient-container::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #f0932b);
+		opacity: 0.3;
+		z-index: -1;
 	}
 </style>
