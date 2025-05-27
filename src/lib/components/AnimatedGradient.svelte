@@ -207,4 +207,15 @@
 
 <style>
 	@import "../styles/AnimatedGradient.css";
+	
+	.gradient-container {
+		width: 100vw;
+		height: 100vh;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: -1;
+		background-blend-mode: normal, normal, normal, normal, normal;
+		animation: hero-gradient-animation 15s linear infinite alternate;
+	}
 </style>
