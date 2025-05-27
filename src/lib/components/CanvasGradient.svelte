@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from "svelte";
 	import { goto } from "$app/navigation";
-	import { NeatGradient } from "@firecms/neat";
+	import pkg from "@firecms/neat";
+	const { NeatGradient } = pkg;
 	import { getRandomHexColor } from "$lib/utils.js";
 
 	let {
@@ -172,16 +173,17 @@
 		}
 		if (refreshInterval) {
 			clearInterval(refreshInterval);
-		}
-	});
+		}	});
 
 	// Re-initialize gradient when palette changes
-	$: if (palette !== null) {
-		initializeGradient();
-	}
+	$effect(() => {
+		if (palette !== null) {
+			initializeGradient();
+		}
+	});
 </script>
 
 <canvas
 	bind:this={canvasRef}
 	style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;"
-/>
+></canvas>

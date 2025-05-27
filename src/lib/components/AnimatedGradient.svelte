@@ -182,14 +182,13 @@
 			goto('', { invalidateAll: true });
 		}, 5000);
 	});
-
 	onDestroy(() => {
 		if (refreshInterval) {
 			clearInterval(refreshInterval);
 		}
 	});
 
-	$: gradientStyle = {
+	const gradientStyle = $derived({
 		backgroundColor,
 		backgroundImage: `
 			radial-gradient(circle at var(--x-0) var(--y-0), ${colors[0]} var(--s-start-0), transparent var(--s-end-0)),
@@ -198,7 +197,7 @@
 			radial-gradient(circle at var(--x-3) var(--y-3), ${colors[3]} var(--s-start-3), transparent var(--s-end-3)),
 			radial-gradient(circle at var(--x-4) var(--y-4), ${colors[4]} var(--s-start-4), transparent var(--s-end-4))
 		`
-	};
+	});
 </script>
 
 <div 
