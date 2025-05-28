@@ -1,5 +1,4 @@
 import { LastFMUser } from "lastfm-ts-api";
-import { Vibrant } from "node-vibrant/node";
 import { error } from "@sveltejs/kit";
 import { env } from "$env/dynamic/public";
 import type { PageServerLoad } from "./$types.js";
@@ -35,18 +34,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		// Check if track has required fields
 		if (!currentTrack.name || !currentTrack.artist || !currentTrack.image) {
 			throw error(500, "Invalid track data received from Last.fm");
-		}
-
-		const albumCoverUrl = currentTrack.image[3]["#text"];
-		
-		let themeColor = "#000000";
-		try {
-			if (albumCoverUrl) {
-				themeColor = await Vibrant.from(albumCoverUrl).getPalette().then(palette => palette.Vibrant?.hex || "#000000");
-			}
-		} catch (error) {
-			console.error("Error extracting theme color:", error);
-		}
+		}		// Use default theme color since we've moved color extraction to client-side
+		const themeColor = "#000000";
 
 		return {
 			track: currentTrack,
@@ -57,20 +46,20 @@ export const load: PageServerLoad = async ({ url }) => {
 				image: currentTrack.image[3]["#text"],
 				favicon: currentTrack.image[1]["#text"]
 			}
-		};
-	} catch (err: any) {
+		};	} catch (err: unknown) {
 		console.error("LastFM API error:", err);
 		
 		// Provide more specific error messages
-		if (err.message?.includes("User not found")) {
+		const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		if (errorMessage.includes("User not found")) {
 			throw error(404, `Last.fm user '${username}' not found. Please check the username.`);
-		} else if (err.message?.includes("Invalid API key")) {
+		} else if (errorMessage.includes("Invalid API key")) {
 			throw error(401, "Invalid Last.fm API key");
-		} else if (err.status) {
+		} else if (err && typeof err === 'object' && 'status' in err) {
 			// Re-throw SvelteKit errors
 			throw err;
 		} else {
-			throw error(500, `Failed to fetch Last.fm data: ${err.message || 'Unknown error'}`);
+			throw error(500, `Failed to fetch Last.fm data: ${errorMessage}`);
 		}
 	}
 };

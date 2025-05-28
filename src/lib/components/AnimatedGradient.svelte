@@ -1,8 +1,6 @@
-<script lang="ts">
-	import { onMount, onDestroy } from "svelte";
-	import { goto } from "$app/navigation";
+<script lang="ts">	import { onMount, onDestroy } from "svelte";
 	import { getRandomHexColor } from "$lib/utils.js";
-	import Vibrant from "node-vibrant";
+	import ColorThief from "colorthief";
 
 	let {
 		colors: initialColors,
@@ -24,11 +22,9 @@
 		'hsla(331, 80%, 52%, 1)'
 	];
 	let colors = $state<[string, string, string, string, string]>(
-		initialColors || defaultColors
-	);
+		initialColors || defaultColors	);
 	let backgroundColor = $state<string>('');
 	let palette = $state<[number, number, number][] | null>(null);
-	let refreshInterval: NodeJS.Timeout | null = null;
 
 	const generateRandomHSLColor = () => {
 		const h = Math.floor(Math.random() * 360);
@@ -78,83 +74,103 @@
 		const l_percent = Math.round(l * 100);
 
 		return `hsla(${h}, ${s}%, ${l_percent}%, 1)`;
-	};
-	// Extract colors using Vibrant package for better color analysis
+	};	// Extract colors using ColorThief for better color analysis
 	async function extractPalette(imageUrl: string): Promise<[number, number, number][]> {
 		try {
-			console.log('🎨 Extracting palette using Vibrant from:', imageUrl);
+			console.log('🎨 Extracting palette using ColorThief from:', imageUrl);
 			const startTime = performance.now();
 			
-			const vibrant = new Vibrant(imageUrl, {
-				colorCount: 8, // Extract more colors for better selection
-				quality: 1 // Higher quality for better color detection
+			// Create image element and set up ColorThief
+			const img = new Image();
+			img.crossOrigin = 'Anonymous'; // Enable CORS for external images
+			
+			const colorThief = new ColorThief();
+			
+			return new Promise((resolve, reject) => {
+				img.onload = () => {
+					try {
+						const endTime = performance.now();
+						console.log(`⏱️ Image loaded in ${(endTime - startTime).toFixed(2)}ms`);
+						
+						// Extract 8 colors with good quality for better selection
+						const palette = colorThief.getPalette(img, 8, 1);
+						console.log('🎨 ColorThief extracted palette:', palette);
+						
+						if (!palette || palette.length === 0) {
+							console.log('❌ No colors extracted by ColorThief, using fallback');
+							resolve([
+								[80, 120, 160],
+								[160, 80, 120], 
+								[120, 160, 80],
+								[140, 100, 180],
+								[180, 140, 100]
+							]);
+							return;
+						}
+						
+						// Filter out colors that are too similar
+						const extractedColors: [number, number, number][] = [];
+						
+						for (const color of palette) {
+							const [r, g, b] = color;
+							
+							// Filter out colors that are too similar to already extracted ones
+							const isDuplicate = extractedColors.some(existing => {
+								const distance = Math.sqrt(
+									Math.pow(r - existing[0], 2) +
+									Math.pow(g - existing[1], 2) +
+									Math.pow(b - existing[2], 2)
+								);
+								return distance < 50; // Minimum distance threshold
+							});
+							
+							if (!isDuplicate) {
+								console.log(`🌈 Color: RGB(${r}, ${g}, ${b})`);
+								extractedColors.push([r, g, b] as [number, number, number]);
+							}
+						}
+						
+						// If we don't have enough colors, add some enhanced variants
+						while (extractedColors.length < 5 && extractedColors.length > 0) {
+							const baseColor = extractedColors[extractedColors.length % extractedColors.length];
+							const variant = createColorVariant(baseColor);
+							extractedColors.push(variant);
+							console.log(`⚡ Added enhanced variant: RGB(${variant[0]}, ${variant[1]}, ${variant[2]})`);
+						}
+						
+						// Fallback if still no colors
+						if (extractedColors.length === 0) {
+							console.log('❌ No valid colors found, using fallback palette');
+							resolve([
+								[80, 120, 160],
+								[160, 80, 120],
+								[120, 160, 80],
+								[140, 100, 180],
+								[180, 140, 100]
+							]);
+							return;
+						}
+						
+						console.log(`🎯 Successfully extracted ${extractedColors.length} colors using ColorThief`);
+						resolve(extractedColors.slice(0, 5)); // Ensure we return exactly 5 colors max
+						
+					} catch (error) {
+						console.error('💥 ColorThief processing failed:', error);
+						reject(error);
+					}
+				};
+				
+				img.onerror = (error) => {
+					console.error('💥 Image loading failed:', error);
+					reject(error);
+				};
+				
+				// Set image source to start loading
+				img.src = imageUrl;
 			});
 			
-			const palette = await vibrant.getPalette();
-			const endTime = performance.now();
-			console.log(`⏱️ Vibrant extraction took ${(endTime - startTime).toFixed(2)}ms`);
-			
-			// Extract colors in order of vibrancy and usefulness for gradients
-			const extractedColors: [number, number, number][] = [];
-			
-			// Priority order: most vibrant and visually appealing colors first
-			const colorPriority = [
-				'Vibrant',
-				'DarkVibrant', 
-				'LightVibrant',
-				'Muted',
-				'DarkMuted',
-				'LightMuted'
-			];
-			
-			for (const colorKey of colorPriority) {
-				const color = palette[colorKey as keyof typeof palette];
-				if (color) {
-					const rgb = color.rgb;
-					const [r, g, b] = rgb;
-					
-					// Filter out colors that are too similar to already extracted ones
-					const isDuplicate = extractedColors.some(existing => {
-						const distance = Math.sqrt(
-							Math.pow(r - existing[0], 2) +
-							Math.pow(g - existing[1], 2) +
-							Math.pow(b - existing[2], 2)
-						);
-						return distance < 50; // Minimum distance threshold
-					});
-					
-					if (!isDuplicate) {
-						console.log(`🌈 ${colorKey}: RGB(${r}, ${g}, ${b}) - Population: ${color.population}`);
-						extractedColors.push([Math.round(r), Math.round(g), Math.round(b)]);
-					}
-				}
-			}
-			
-			// If we don't have enough colors, add some enhanced variants
-			while (extractedColors.length < 5 && extractedColors.length > 0) {
-				const baseColor = extractedColors[extractedColors.length % extractedColors.length];
-				const variant = createColorVariant(baseColor);
-				extractedColors.push(variant);
-				console.log(`⚡ Added enhanced variant: RGB(${variant[0]}, ${variant[1]}, ${variant[2]})`);
-			}
-			
-			// Fallback if no colors were extracted
-			if (extractedColors.length === 0) {
-				console.log('❌ No colors extracted by Vibrant, using fallback palette');
-				return [
-					[80, 120, 160],
-					[160, 80, 120], 
-					[120, 160, 80],
-					[140, 100, 180],
-					[180, 140, 100]
-				];
-			}
-			
-			console.log(`🎯 Successfully extracted ${extractedColors.length} colors using Vibrant`);
-			return extractedColors.slice(0, 5); // Ensure we return exactly 5 colors max
-			
 		} catch (error) {
-			console.error('💥 Vibrant extraction failed:', error);
+			console.error('💥 ColorThief extraction failed:', error);
 			// Fallback to a nice default palette
 			return [
 				[80, 120, 160],
@@ -232,10 +248,9 @@
 
 		return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 	}
-
-	// Enhanced helper to convert Vibrant palette to gradient colors
+	// Enhanced helper to convert ColorThief palette to gradient colors
 	function paletteToColors(palette: [number, number, number][] | null): [string, string, string, string, string] {
-		console.log('🎨 Converting Vibrant palette to gradient colors:', palette);
+		console.log('🎨 Converting ColorThief palette to gradient colors:', palette);
 		
 		if (!palette || palette.length === 0) {
 			console.log('❌ No palette provided, generating random colors');
@@ -244,9 +259,9 @@
 			return randomColors;
 		}
 
-		console.log('✅ Processing Vibrant palette with', palette.length, 'colors');
+		console.log('✅ Processing ColorThief palette with', palette.length, 'colors');
 		
-		// Vibrant already gives us good colors, but let's enhance them for gradients
+		// ColorThief gives us good colors, but let's enhance them for gradients
 		const enhancedColors = palette.map(([r, g, b], index) => {
 			const hsl = rgbToHsl(r, g, b);
 			
@@ -275,24 +290,23 @@
 			return hslaColor;
 		}) as [string, string, string, string, string];
 
-		console.log('🎉 Final Vibrant-based gradient colors:', hslaColors);
+		console.log('🎉 Final ColorThief-based gradient colors:', hslaColors);
 		return hslaColors;
-	}
-	// Extract palette and update colors when track changes
+	}	// Extract palette and update colors when track changes
 	async function updateColorsFromTrack() {
 		console.log('🚀 Updating colors for track:', track?.name, 'by', track?.artist?.['#text']);
 		
 		if (track?.image?.[3]?.['#text']) {
-			console.log('🖼️ Extracting palette from image using Vibrant:', track.image[3]['#text']);
+			console.log('🖼️ Extracting palette from image using ColorThief:', track.image[3]['#text']);
 			try {
 				const newPalette = await extractPalette(track.image[3]['#text']);
-				console.log('🎨 Vibrant extracted palette:', newPalette);
+				console.log('🎨 ColorThief extracted palette:', newPalette);
 				
 				if (newPalette && newPalette.length > 0) {
-					console.log('🎯 Using Vibrant palette with', newPalette.length, 'colors');
+					console.log('🎯 Using ColorThief palette with', newPalette.length, 'colors');
 					palette = newPalette;
 					
-					// Use the first (most vibrant) color as background with reduced opacity
+					// Use the first (dominant) color as background with reduced opacity
 					const [r, g, b] = newPalette[0] as [number, number, number];
 					const hsl = rgbToHsl(r, g, b);
 					// Make background color darker and less saturated for better contrast
@@ -305,14 +319,14 @@
 					backgroundColor = bgColor;
 					colors = paletteToColors(newPalette);
 				} else {
-					console.log('❌ Vibrant extraction returned empty result');
+					console.log('❌ ColorThief extraction returned empty result');
 					if (randomize) {
 						console.log('🎲 Falling back to random colors');
 						colors = generateRandomColors();
 					}
 				}
 			} catch (error) {
-				console.error('💥 Failed to extract palette with Vibrant:', error);
+				console.error('💥 Failed to extract palette with ColorThief:', error);
 				if (randomize) {
 					console.log('🎲 Falling back to random colors');
 					colors = generateRandomColors();
@@ -326,20 +340,9 @@
 			colors = initialColors || defaultColors;
 			backgroundColor = '';
 		}
-	}onMount(() => {
-		// Auto refresh effect
-		refreshInterval = setInterval(() => {
-			goto('', { invalidateAll: true });
-		}, 5000);
-		
+	}	onMount(() => {
 		// Initial color update
 		updateColorsFromTrack();
-	});
-	
-	onDestroy(() => {
-		if (refreshInterval) {
-			clearInterval(refreshInterval);
-		}
 	});
 	// React to track changes
 	$effect(() => {

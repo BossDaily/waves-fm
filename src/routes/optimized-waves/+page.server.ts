@@ -1,5 +1,4 @@
 import { LastFMUser } from "lastfm-ts-api";
-import { Vibrant } from "node-vibrant/node";
 import { error } from "@sveltejs/kit";
 import { env } from "$env/dynamic/public";
 import type { PageServerLoad } from "./$types.js";
@@ -34,21 +33,10 @@ export const load: PageServerLoad = async ({ url }) => {
 		if (!currentTrack.name || !currentTrack.artist || !currentTrack.image) {
 			throw error(500, "Invalid track data received from Last.fm");
 		}
-
 		const albumCoverUrl = currentTrack.image[3]["#text"];
-		
-		let themeColor = "#000000";
-		try {
-			if (albumCoverUrl) {
-				themeColor = await Vibrant.from(albumCoverUrl).getPalette().then(palette => palette.Vibrant?.hex || "#000000");
-			}
-		} catch (error) {
-			console.error("Error extracting theme color:", error);
-		}
 
 		return {
 			track: currentTrack,
-			themeColor,
 			meta: {
 				title: `${currentTrack.name} - ${currentTrack.artist["#text"]}`,
 				description: `Currently playing: ${currentTrack.name} by ${currentTrack.artist["#text"]} from the album ${currentTrack.album["#text"]}`,
