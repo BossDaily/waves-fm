@@ -22,14 +22,12 @@
 		'hsla(273, 58%, 78%, 1)',
 		'hsla(331, 80%, 52%, 1)'
 	];
-
 	let colors = $state<[string, string, string, string, string]>(
 		initialColors || defaultColors
 	);
-
 	let backgroundColor = $state<string>('');
-	let palette: [number, number, number][] | null = null;
-	let refreshInterval: number;
+	let palette = $state<[number, number, number][] | null>(null);
+	let refreshInterval: NodeJS.Timeout | null = null;
 
 	const generateRandomHSLColor = () => {
 		const h = Math.floor(Math.random() * 360);
@@ -132,90 +130,153 @@
 		});
 	}
 
-	onMount(async () => {
-		// Extract color palette from album artwork
-		if (track?.image[3]['#text']) {
+	// Helper to convert a palette to five colors for the gradient
+	function paletteToColors(palette: [number, number, number][] | null): [string, string, string, string, string] {
+		console.log('🎨 paletteToColors called with:', palette);
+		
+		if (!palette || palette.length === 0) {
+			console.log('❌ No palette provided, generating random colors');
+			const randomColors = generateRandomColors();
+			console.log('🎲 Generated random colors:', randomColors);
+			return randomColors;
+		}
+
+		console.log('✅ Processing palette with', palette.length, 'colors');
+		
+		// Filter out very dark or very light colors and get the 5 most vibrant ones
+		const filteredColors = palette
+			.slice(1) // Skip the first color as it's used for background
+			.filter((color): color is [number, number, number] => {
+				if (!color) return false;
+				const [r, g, b] = color as [number, number, number];
+				const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+				const isValid = brightness > 30 && brightness < 220;
+				console.log(`🔍 Color [${r}, ${g}, ${b}] brightness: ${brightness.toFixed(1)}, valid: ${isValid}`);
+				return isValid;
+			})
+			.slice(0, 5); // Get top 5 colors
+
+		console.log('🎯 Filtered colors:', filteredColors);
+
+		// Ensure we have exactly 5 colors
+		const finalColors = [...filteredColors];
+		while (finalColors.length < 5) {
+			const fallbackColor = filteredColors[0] || [255, 100, 100];
+			console.log('⚠️ Adding fallback color:', fallbackColor);
+			finalColors.push(fallbackColor);
+		}
+
+		const hslaColors = finalColors.map(([r, g, b]) => {
+			const hslaColor = rgbToHsla(r, g, b);
+			console.log(`🌈 RGB [${r}, ${g}, ${b}] → HSLA ${hslaColor}`);
+			return hslaColor;
+		}) as [string, string, string, string, string];
+		console.log('🎊 Final HSLA colors:', hslaColors);
+		return hslaColors;
+	}
+
+	// Extract palette and update colors when track changes
+	async function updateColorsFromTrack() {
+		console.log('🚀 Updating colors for track:', track?.name, 'by', track?.artist?.['#text']);
+		
+		if (track?.image?.[3]?.['#text']) {
+			console.log('🖼️ Extracting palette from image:', track.image[3]['#text']);
 			try {
-				palette = await extractPalette(track.image[3]['#text']);
+				const startTime = performance.now();
+				const newPalette = await extractPalette(track.image[3]['#text']);
+				const endTime = performance.now();
+				console.log(`⏱️ Palette extraction took ${(endTime - startTime).toFixed(2)}ms`);
+				console.log('🎨 Raw extracted palette:', newPalette);
 				
-				if (palette && palette.length > 0) {
+				if (newPalette && newPalette.length > 0) {
+					console.log('🎯 Using extracted palette with', newPalette.length, 'colors');
+					palette = newPalette;
+					
 					// Get the dominant color (first color in palette) for background
-					const [r, g, b] = palette[0] as [number, number, number];
+					const [r, g, b] = newPalette[0] as [number, number, number];
 					const bgColor = rgbToHsla(r, g, b);
+					console.log(`🏠 Background color: RGB [${r}, ${g}, ${b}] → HSLA ${bgColor}`);
 					backgroundColor = bgColor;
-
-					// Filter out very dark or very light colors and get the 5 most vibrant ones
-					const filteredColors = palette
-						.slice(1) // Skip the first color as it's used for background
-						.filter((color): color is [number, number, number] => {
-							if (!color) return false;
-							const [r, g, b] = color as [number, number, number];
-							const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-							return brightness > 30 && brightness < 220; // Exclude too dark or too light colors
-						})
-						.slice(0, 5); // Get top 5 colors
-
-					// Ensure we have exactly 5 colors
-					const finalColors = [...filteredColors];
-					while (finalColors.length < 5) {
-						finalColors.push(filteredColors[0] || [255, 100, 100]); // Fallback color if needed
+					colors = paletteToColors(newPalette);
+				} else {
+					console.log('❌ Palette extraction returned empty result');
+					if (randomize) {
+						console.log('🎲 Falling back to random colors');
+						colors = generateRandomColors();
 					}
-
-					const newColors = finalColors.map(([r, g, b]) => 
-						rgbToHsla(r, g, b)
-					) as [string, string, string, string, string];
-
-					colors = newColors;
 				}
 			} catch (error) {
-				console.error('Failed to extract palette:', error);
+				console.error('💥 Failed to extract palette:', error);
 				if (randomize) {
+					console.log('🎲 Falling back to random colors');
 					colors = generateRandomColors();
 				}
 			}
 		} else if (randomize) {
+			console.log('🎲 No image URL, generating random colors');
 			colors = generateRandomColors();
+		} else {
+			console.log('🎨 Using default colors');
+			colors = initialColors || defaultColors;
+			backgroundColor = '';
 		}
-
+	}	onMount(() => {
 		// Auto refresh effect
 		refreshInterval = setInterval(() => {
 			goto('', { invalidateAll: true });
 		}, 5000);
+		
+		// Initial color update
+		updateColorsFromTrack();
 	});
+	
 	onDestroy(() => {
 		if (refreshInterval) {
 			clearInterval(refreshInterval);
 		}
 	});
-	const gradientStyle = $derived({
-		backgroundColor,
-		backgroundImage: `
-			radial-gradient(circle at var(--x-0, 40%) var(--y-0, 20%), ${colors[0]} var(--s-start-0, 0%), transparent var(--s-end-0, 50%)),
-			radial-gradient(circle at var(--x-1, 80%) var(--y-1, 0%), ${colors[1]} var(--s-start-1, 0%), transparent var(--s-end-1, 50%)),
-			radial-gradient(circle at var(--x-2, 0%) var(--y-2, 50%), ${colors[2]} var(--s-start-2, 0%), transparent var(--s-end-2, 50%)),
-			radial-gradient(circle at var(--x-3, 80%) var(--y-3, 50%), ${colors[3]} var(--s-start-3, 0%), transparent var(--s-end-3, 50%)),
-			radial-gradient(circle at var(--x-4, 0%) var(--y-4, 100%), ${colors[4]} var(--s-start-4, 0%), transparent var(--s-end-4, 50%))
-		`
+	// React to track changes
+	$effect(() => {
+		if (track) {
+			console.log('🔄 Track changed, updating colors...', track.name);
+			updateColorsFromTrack();
+		}
 	});
 
-	// Debug logging
+	// Create properly formatted gradient style
+	const gradientStyle = $derived(() => {
+		const backgroundImage = [
+			`radial-gradient(circle at var(--x-0, 40%) var(--y-0, 20%), ${colors[0]} var(--s-start-0, 0%), transparent var(--s-end-0, 50%))`,
+			`radial-gradient(circle at var(--x-1, 80%) var(--y-1, 0%), ${colors[1]} var(--s-start-1, 0%), transparent var(--s-end-1, 50%))`,
+			`radial-gradient(circle at var(--x-2, 0%) var(--y-2, 50%), ${colors[2]} var(--s-start-2, 0%), transparent var(--s-end-2, 50%))`,
+			`radial-gradient(circle at var(--x-3, 80%) var(--y-3, 50%), ${colors[3]} var(--s-start-3, 0%), transparent var(--s-end-3, 50%))`,
+			`radial-gradient(circle at var(--x-4, 0%) var(--y-4, 100%), ${colors[4]} var(--s-start-4, 0%), transparent var(--s-end-4, 50%))`
+		].join(', ');
+
+		return {
+			backgroundColor,
+			backgroundImage
+		};
+	});	// Enhanced debug logging
 	$effect(() => {
-		console.log('AnimatedGradient - colors:', colors);
-		console.log('AnimatedGradient - backgroundColor:', backgroundColor);
-		console.log('AnimatedGradient - gradientStyle:', gradientStyle);
+		console.group('🎨 AnimatedGradient State Update');
+		console.log('🌈 Current colors:', colors);
+		console.log('🏠 Background color:', backgroundColor);
+		console.log('🎯 Raw palette:', palette);
+		console.log('🎨 Generated gradient style:', gradientStyle());
+		console.groupEnd();
 	});
 </script>
 
 <div 
 	class="gradient-container {className || ''}"
-	style="{Object.entries(gradientStyle).map(([key, value]) => `${key}: ${value}`).join('; ')}"
+	style="background-color: {backgroundColor}; background-image: {gradientStyle().backgroundImage};"
 	data-colors="{JSON.stringify(colors)}"
 	data-background="{backgroundColor}"
 ></div>
 
 <style>
-	@import "../styles/AnimatedGradient.css";
-	.gradient-container {
+	@import "../styles/AnimatedGradient.css";	.gradient-container {
 		width: 100vw;
 		height: 100vh;
 		position: fixed;
@@ -224,13 +285,6 @@
 		z-index: 1;
 		background-blend-mode: normal, normal, normal, normal, normal;
 		animation: hero-gradient-animation 15s linear infinite alternate;
-		
-		/* Fallback gradient in case CSS variables don't work */
-		background: radial-gradient(circle at 40% 20%, hsla(328, 64%, 68%, 0.8) 0%, transparent 50%),
-					radial-gradient(circle at 80% 0%, hsla(328, 84%, 92%, 0.8) 0%, transparent 50%),
-					radial-gradient(circle at 0% 50%, hsla(303, 73%, 68%, 0.8) 0%, transparent 50%),
-					radial-gradient(circle at 80% 50%, hsla(273, 58%, 78%, 0.8) 0%, transparent 50%),
-					radial-gradient(circle at 0% 100%, hsla(331, 80%, 52%, 0.8) 0%, transparent 50%);
 	}
 	
 	/* Test styles to ensure visibility */
