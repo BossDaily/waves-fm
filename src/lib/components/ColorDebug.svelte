@@ -39,9 +39,8 @@
 					// Get the dominant color first
 					const dominantColor = colorThief.getColor(img, 10);
 					console.log('🎯 Dominant color:', dominantColor);
-					
-					// Get palette of 4 colors with good quality
-					const palette = colorThief.getPalette(img, 4, 10);
+							// Get palette of 5 colors with good quality
+					const palette = colorThief.getPalette(img, 5, 10);
 					console.log('🎨 Color palette:', palette);
 					
 					if (palette && palette.length > 0) {
@@ -58,13 +57,13 @@
 							);
 							
 							// Only add if sufficiently different (distance > 30)
-							if (distance > 30 && colors.length < 4) {
+							if (distance > 30 && colors.length < 5) {
 								colors.push([r, g, b] as [number, number, number]);
 							}
 						}
 						
 						// Fill remaining slots with variations if needed
-						while (colors.length < 4) {
+						while (colors.length < 5) {
 							const baseColor = colors[0];
 							const variation: [number, number, number] = [
 								Math.min(255, Math.max(0, baseColor[0] + (Math.random() - 0.5) * 50)),
@@ -72,9 +71,8 @@
 								Math.min(255, Math.max(0, baseColor[2] + (Math.random() - 0.5) * 50))
 							];
 							colors.push(variation);
-						}
-						
-						resolve(colors.slice(0, 4));
+						}						
+						resolve(colors.slice(0, 5));
 					} else {
 						resolve([dominantColor as [number, number, number]]);
 					}
