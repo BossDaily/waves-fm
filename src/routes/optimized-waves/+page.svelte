@@ -1,11 +1,11 @@
 <script lang="ts">
 	import AnimatedGradient from "$lib/components/AnimatedGradient.svelte";
+	import ColorDebug from "$lib/components/ColorDebug.svelte";
 	import type { PageData } from "./$types.js";
 	import { onMount } from "svelte";
-
 	let { data }: { data: PageData } = $props();
 	let currentTrack = $state(data.track);
-
+	let showColorDebug = $state(false);
 	async function fetchCurrentTrack() {
 		try {
 			const response = await fetch(`/api/current-track?username=${data.username}&apiKey=${data.apiKey}`);
@@ -15,7 +15,7 @@
 				// Only update if the track has actually changed
 				if (newTrackData.track && 
 					(newTrackData.track.name !== currentTrack.name || 
-					 newTrackData.track.artist['#text'] !== currentTrack.artist['#text'])) {
+					newTrackData.track.artist['#text'] !== currentTrack.artist['#text'])) {
 					console.log('🎵 Track changed:', newTrackData.track.name, 'by', newTrackData.track.artist['#text']);
 					currentTrack = newTrackData.track;
 				}
@@ -24,6 +24,13 @@
 			}
 		} catch (error) {
 			console.error("Error fetching current track:", error);
+		}
+	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key.toLowerCase() === 'd') {
+			showColorDebug = !showColorDebug;
+			console.log('🎨 Color debug toggled:', showColorDebug);
 		}
 	}
 
@@ -36,6 +43,8 @@
 	});
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 <svelte:head>
 	<title>{currentTrack.name} - {currentTrack.artist['#text']}</title>
 	<meta name="description" content="Currently playing: {currentTrack.name} by {currentTrack.artist['#text']} from the album {currentTrack.album['#text']}" />
@@ -47,8 +56,20 @@
 
 <main class="min-h-screen relative">
 	<AnimatedGradient track={currentTrack} randomize={false} />
+	
 	<!-- Debug info to ensure the page is loading -->
 	<div class="absolute top-4 left-4 z-50 text-white bg-black bg-opacity-50 p-2 rounded">
 		Track: {currentTrack.name} by {currentTrack.artist['#text']}
+	</div>
+		<!-- Color Debug Component -->
+	{#if showColorDebug}
+		<div class="absolute top-4 right-4 z-50 max-w-md">
+			<ColorDebug track={currentTrack} />
+		</div>
+	{/if}
+	
+	<!-- Instructions for debug toggle -->
+	<div class="absolute bottom-4 left-4 z-50 text-white bg-black bg-opacity-50 p-2 rounded text-sm">
+		Press "D" to toggle color debug
 	</div>
 </main>
