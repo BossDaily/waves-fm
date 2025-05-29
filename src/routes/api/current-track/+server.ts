@@ -1,11 +1,12 @@
 import { LastFMUser } from "lastfm-ts-api";
-import { error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import { env } from "$env/dynamic/public";
-import type { PageServerLoad } from "./$types.js";
+import type { RequestHandler } from "./$types.js";
 
-export const load: PageServerLoad = async ({ url }) => {
+export const GET: RequestHandler = async ({ url }) => {
 	const apiKey = url.searchParams.get("apiKey") || env.PUBLIC_LASTFM;
 	const username = url.searchParams.get("username") || env.PUBLIC_LASTFM_USERS;
+
 	if (!apiKey) {
 		throw error(400, "API key is required");
 	}
@@ -14,9 +15,6 @@ export const load: PageServerLoad = async ({ url }) => {
 		throw error(400, "Username is required");
 	}
 
-	if (url.searchParams.get("username") && !url.searchParams.get("apiKey")) {
-		throw error(400, "API key is required when providing a username");
-	}
 	try {
 		const user = new LastFMUser(apiKey);
 		const tracks = await user.getRecentTracks({
@@ -33,18 +31,10 @@ export const load: PageServerLoad = async ({ url }) => {
 		if (!currentTrack.name || !currentTrack.artist || !currentTrack.image) {
 			throw error(500, "Invalid track data received from Last.fm");
 		}
-		const albumCoverUrl = currentTrack.image[3]["#text"];
-		return {
-			track: currentTrack,
-			meta: {
-				title: `${currentTrack.name} - ${currentTrack.artist["#text"]}`,
-				description: `Currently playing: ${currentTrack.name} by ${currentTrack.artist["#text"]} from the album ${currentTrack.album["#text"]}`,
-				image: currentTrack.image[3]["#text"],
-				favicon: currentTrack.image[1]["#text"]
-			},
-			apiKey,
-			username
-		};
+
+		return json({
+			track: currentTrack
+		});
 	} catch (err: any) {
 		console.error("LastFM API error:", err);
 		
