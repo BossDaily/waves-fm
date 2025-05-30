@@ -1,5 +1,4 @@
 <script lang="ts">	import { onMount, onDestroy } from "svelte";
-	import { goto } from "$app/navigation";
 	import * as NEAT from "@firecms/neat";
 	const { NeatGradient } = NEAT;
 	import { 
@@ -18,7 +17,6 @@
 	let canvasRef: HTMLCanvasElement;
 	let gradientRef: any = null;
 	let palette: [number, number, number][] | null = null;
-	let refreshInterval: any;
 	const albumName = track?.album['#text'];
 
 	function initializeGradient() {
@@ -73,8 +71,7 @@
 			resolution: 1 / 3,
 			grainIntensity: 0,
 		});
-	}
-	onMount(async () => {
+	}	onMount(async () => {
 		// Extract color palette from album artwork
 		if (track?.image[3]['#text']) {
 			try {
@@ -86,26 +83,30 @@
 		}
 
 		initializeGradient();
-
-		// Auto refresh effect to update current track
-		refreshInterval = setInterval(() => {
-			// In SvelteKit, we need to navigate to refresh the page data
-			goto('', { invalidateAll: true });
-		}, 5000);
 	});
-
 	onDestroy(() => {
 		if (gradientRef) {
 			gradientRef.destroy();
-		}		if (refreshInterval) {
-			clearInterval(refreshInterval);
 		}
 	});
-
 	// Re-initialize gradient when palette changes
 	$effect(() => {
 		if (palette !== null) {
 			initializeGradient();
+		}
+	});
+	// Re-extract palette and re-initialize gradient when track changes
+	$effect(() => {
+		if (track?.image[3]['#text']) {
+			(async () => {
+				try {
+					palette = await extractPaletteFromCanvas(track.image[3]['#text']);
+				} catch (error) {
+					console.error('Failed to extract palette:', error);
+					palette = null;
+				}
+				initializeGradient();
+			})();
 		}
 	});
 </script>

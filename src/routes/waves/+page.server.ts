@@ -35,7 +35,6 @@ export const load: PageServerLoad = async ({ url }) => {
 			throw error(500, "Invalid track data received from Last.fm");
 		}		// Use default theme color since we've moved color extraction to client-side
 		const themeColor = "#000000";
-
 		return {
 			track: currentTrack,
 			themeColor,
@@ -44,8 +43,10 @@ export const load: PageServerLoad = async ({ url }) => {
 				description: `Currently playing: ${currentTrack.name} by ${currentTrack.artist["#text"]} from the album ${currentTrack.album["#text"]}`,
 				image: currentTrack.image[3]["#text"],
 				favicon: currentTrack.image[1]["#text"]
-			}
-		};	} catch (err: unknown) {
+			},
+			apiKey,
+			username
+		};} catch (err: unknown) {
 		console.error("LastFM API error:", err);
 		
 		// Provide more specific error messages
