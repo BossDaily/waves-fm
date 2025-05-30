@@ -6,7 +6,6 @@ import type { PageServerLoad } from "./$types.js";
 export const load: PageServerLoad = async ({ url }) => {
 	const apiKey = url.searchParams.get("apiKey") || env.PUBLIC_LASTFM;
 	const username = url.searchParams.get("username") || env.PUBLIC_LASTFM_USERS?.split(",")[0];
-  console.log(username)
 
 	if (!apiKey) {
 		throw error(400, "API key is required");

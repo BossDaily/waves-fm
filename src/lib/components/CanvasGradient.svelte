@@ -1,7 +1,7 @@
 <script lang="ts">	import { onMount, onDestroy } from "svelte";
 	import { goto } from "$app/navigation";
-	import pkg from "@firecms/neat";
-	const { NeatGradient } = pkg;
+	import * as NEAT from "@firecms/neat";
+	const { NeatGradient } = NEAT;
 	import { 
 		getRandomHexColor, 
 		rgbToHex,
