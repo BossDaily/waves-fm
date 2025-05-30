@@ -1,5 +1,9 @@
 <script lang="ts">
-	import ColorThief from "colorthief";
+	import { 
+		extractColorsFromImage,
+		rgbArrayToHex,
+		getTextColor 
+	} from "$lib/utils.js";
 	import { onMount } from "svelte";
 
 	let {
@@ -7,89 +11,9 @@
 	}: {
 		track: any;
 	} = $props();
-
 	let extractedColors = $state<[number, number, number][]>([]);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
-
-	// Helper function to convert RGB to hex for display
-	function rgbToHex([r, g, b]: [number, number, number]): string {
-		return "#" + [r, g, b].map(x => {
-			const hex = x.toString(16);
-			return hex.length === 1 ? "0" + hex : hex;
-		}).join("");
-	}
-
-	// Helper function to get text color based on background brightness
-	function getTextColor([r, g, b]: [number, number, number]): string {
-		const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-		return brightness > 128 ? "#000000" : "#ffffff";
-	}
-
-	// Extract colors from album cover
-	async function extractColorsFromImage(imageUrl: string): Promise<[number, number, number][]> {
-		return new Promise((resolve, reject) => {
-			const img = new Image();
-			img.crossOrigin = 'Anonymous';
-			
-			const colorThief = new ColorThief();
-			
-			img.onload = () => {
-				try {
-					// Get the dominant color first
-					const dominantColor = colorThief.getColor(img, 10);
-					console.log('🎯 Dominant color:', dominantColor);
-							// Get palette of 5 colors with good quality
-					const palette = colorThief.getPalette(img, 5, 10);
-					console.log('🎨 Color palette:', palette);
-					
-					if (palette && palette.length > 0) {
-						// Ensure we have the dominant color first, then the palette
-						const colors: [number, number, number][] = [dominantColor as [number, number, number]];
-						
-						// Add palette colors that aren't too similar to dominant
-						for (const color of palette) {
-							const [r, g, b] = color;
-							const distance = Math.sqrt(
-								Math.pow(r - dominantColor[0], 2) +
-								Math.pow(g - dominantColor[1], 2) +
-								Math.pow(b - dominantColor[2], 2)
-							);
-							
-							// Only add if sufficiently different (distance > 30)
-							if (distance > 30 && colors.length < 5) {
-								colors.push([r, g, b] as [number, number, number]);
-							}
-						}
-						
-						// Fill remaining slots with variations if needed
-						while (colors.length < 5) {
-							const baseColor = colors[0];
-							const variation: [number, number, number] = [
-								Math.min(255, Math.max(0, baseColor[0] + (Math.random() - 0.5) * 50)),
-								Math.min(255, Math.max(0, baseColor[1] + (Math.random() - 0.5) * 50)),
-								Math.min(255, Math.max(0, baseColor[2] + (Math.random() - 0.5) * 50))
-							];
-							colors.push(variation);
-						}						
-						resolve(colors.slice(0, 5));
-					} else {
-						resolve([dominantColor as [number, number, number]]);
-					}
-				} catch (err) {
-					console.error('ColorThief extraction failed:', err);
-					reject(err);
-				}
-			};
-			
-			img.onerror = (err) => {
-				console.error('Image loading failed:', err);
-				reject(err);
-			};
-			
-			img.src = imageUrl;
-		});
-	}
 
 	// Update colors when track changes
 	async function updateColors() {
@@ -184,18 +108,16 @@
 				<div class="space-y-3">
 					{#each extractedColors as color, index}
 						<div class="flex items-center space-x-3">
-							<!-- Color swatch -->
-							<div 
+							<!-- Color swatch -->							<div 
 								class="w-16 h-16 rounded-lg shadow-md border border-gray-200 flex items-center justify-center text-xs font-mono"
-								style="background-color: {rgbToHex(color)}; color: {getTextColor(color)}"
+								style="background-color: {rgbArrayToHex(color)}; color: {getTextColor(color)}"
 							>
 								{index === 0 ? 'DOM' : index}
 							</div>
 							
-							<!-- Color info -->
-							<div class="flex-1">
+							<!-- Color info -->							<div class="flex-1">
 								<div class="font-mono text-sm">
-									{rgbToHex(color)}
+									{rgbArrayToHex(color)}
 								</div>
 								<div class="text-xs text-gray-500">
 									RGB({color[0]}, {color[1]}, {color[2]})

@@ -1,6 +1,9 @@
 <script lang="ts">	import { onMount, onDestroy } from "svelte";
-	import { getRandomHexColor } from "$lib/utils.js";
-	import ColorThief from "colorthief";
+	import { 
+		getRandomHexColor, 
+		rgbArrayToHex,
+		extractColorsFromImage 
+	} from "$lib/utils.js";
 
 	let {
 		colors: initialColors,
@@ -22,140 +25,9 @@
 	];
 	let colors = $state<[string, string, string, string, string]>(
 		initialColors || defaultColors
-	);
-	let backgroundColor = $state<string>('');
+	);	let backgroundColor = $state<string>('');
 	let palette = $state<[number, number, number][] | null>(null);
 
-	// Helper function to convert RGB to HEX
-	const rgbToHex = (r: number, g: number, b: number): string => {
-		return `#${[r, g, b].map(x => {
-			const hex = x.toString(16);
-			return hex.length === 1 ? '0' + hex : hex;
-		}).join('')}`;
-	};
-
-	// Replaced with logic from ColorDebug.svelte's extractColorsFromImage
-	async function extractPalette(imageUrl: string): Promise<[number, number, number][]> {
-		try {
-			console.log('🎨 Extracting palette using ColorDebug logic from:', imageUrl);
-			const startTime = performance.now();
-			
-			const img = new Image();
-			img.crossOrigin = 'Anonymous'; 
-			
-			const colorThief = new ColorThief();
-			
-			return new Promise((resolve, reject) => {
-				img.onload = () => {
-					try {
-						const endTime = performance.now();
-						console.log(`⏱️ Image loaded in ${(endTime - startTime).toFixed(2)}ms (AnimatedGradient)`);
-						
-						// Get the dominant color first
-						const dominantColor = colorThief.getColor(img, 10);
-						console.log('🎨 Dominant color (AnimatedGradient):', dominantColor);
-						
-						// Get palette of 5 colors with good quality
-						const palette = colorThief.getPalette(img, 5, 10);
-						console.log('🎨 ColorThief palette (AnimatedGradient):', palette);
-						
-						if (palette && palette.length > 0) {
-							// Ensure we have the dominant color first, then the palette
-							const colorsToProcess: [number, number, number][] = [dominantColor as [number, number, number]];
-							
-							// Add palette colors that aren't too similar to dominant
-							for (const color of palette) {
-								const [r, g, b] = color;
-								const distance = Math.sqrt(
-									Math.pow(r - dominantColor[0], 2) +
-									Math.pow(g - dominantColor[1], 2) +
-									Math.pow(b - dominantColor[2], 2)
-								);
-								
-								// Only add if sufficiently different (distance > 30)
-								if (distance > 30 && colorsToProcess.length < 5) {
-									colorsToProcess.push([r, g, b] as [number, number, number]);
-								}
-							}
-							
-							// Fill remaining slots with variations if needed
-							while (colorsToProcess.length < 5 && colorsToProcess.length > 0) { // ensure colorsToProcess is not empty
-								const baseColor = colorsToProcess[0]; // Use dominant color for variations
-								const variation: [number, number, number] = [
-									Math.min(255, Math.max(0, Math.round(baseColor[0] + (Math.random() - 0.5) * 50))),
-									Math.min(255, Math.max(0, Math.round(baseColor[1] + (Math.random() - 0.5) * 50))),
-									Math.min(255, Math.max(0, Math.round(baseColor[2] + (Math.random() - 0.5) * 50)))
-								];
-								// Ensure variant is not too similar to existing colors before pushing
-								const isDuplicateVariant = colorsToProcess.some(existing => {
-									const dist = Math.sqrt(
-										Math.pow(variation[0] - existing[0], 2) +
-										Math.pow(variation[1] - existing[1], 2) +
-										Math.pow(variation[2] - existing[2], 2)
-									);
-									return dist < 30; // Use a threshold for variants too
-								});
-								if (!isDuplicateVariant) {
-									colorsToProcess.push(variation);
-								} else {
-									// If variant is duplicate, break to avoid infinite loop if all possible variations are too similar
-									// or try a different variation strategy if complex logic is desired.
-									// For now, just log and break if we can't easily find a distinct variant.
-									console.log("Could not generate a distinct variant, using current set.");
-									break;
-								}
-							}						
-							resolve(colorsToProcess.slice(0, 5));
-						} else if (dominantColor) {
-							// Fallback to just dominant color if palette is empty, and generate variations
-							const colorsToProcess: [number, number, number][] = [dominantColor as [number, number, number]];
-							while (colorsToProcess.length < 5) {
-								const baseColor = colorsToProcess[0];
-								const variation: [number, number, number] = [
-									Math.min(255, Math.max(0, Math.round(baseColor[0] + (Math.random() - 0.5) * 50))),
-									Math.min(255, Math.max(0, Math.round(baseColor[1] + (Math.random() - 0.5) * 50))),
-									Math.min(255, Math.max(0, Math.round(baseColor[2] + (Math.random() - 0.5) * 50)))
-								];
-								const isDuplicateVariant = colorsToProcess.some(existing => {
-									const dist = Math.sqrt(
-										Math.pow(variation[0] - existing[0], 2) +
-										Math.pow(variation[1] - existing[1], 2) +
-										Math.pow(variation[2] - existing[2], 2)
-									);
-									return dist < 30;
-								});
-								if (!isDuplicateVariant) {
-									colorsToProcess.push(variation);
-								} else {
-									console.log("Could not generate a distinct variant for dominant-only, using current set.");
-									break; 
-								}
-							}
-							resolve(colorsToProcess.slice(0,5));
-						} else {
-							console.log('❌ No dominant color or palette extracted by ColorThief (AnimatedGradient).');
-							resolve([]); 
-							return;
-						}
-					} catch (error) {
-						console.error('💥 ColorThief processing failed (AnimatedGradient):', error);
-						reject(error);
-					}
-				};
-				
-				img.onerror = (error) => {
-					console.error('💥 Image loading failed (AnimatedGradient):', error);
-					reject(error);
-				};
-				
-				img.src = imageUrl;
-			});
-			
-		} catch (error) {
-			console.error('💥 ColorThief extraction failed (AnimatedGradient):', error);
-			return [];
-		}
-	}
 	// Simplified helper to convert raw ColorThief palette to HEX strings
 	function paletteToColors(palette: [number, number, number][] | null): [string, string, string, string, string] {
 		console.log('🎨 Converting raw palette to HEX strings:', palette);
@@ -174,9 +46,8 @@
 		if (filledPalette.length === 0) {
 			return [] as unknown as [string, string, string, string, string];
 		}
-
 		const hexColors = filledPalette.slice(0, 5).map(([r, g, b]) => {
-			return rgbToHex(r, g, b); // Use rgbToHex
+			return rgbArrayToHex([r, g, b]); // Use utility function
 		}) as [string, string, string, string, string];
 
 		console.log('🎉 Final raw HEX gradient colors:', hexColors);
@@ -186,11 +57,10 @@
 	// Extract palette and update colors when track changes
 	async function updateColorsFromTrack() {
 		console.log('🚀 Updating colors for track:', track?.name, 'by', track?.artist?.["#text"]);
-		
-		if (track?.image?.[3]?.['#text']) {
+				if (track?.image?.[3]?.['#text']) {
 			console.log('🖼️ Extracting palette from image using ColorThief:', track.image[3]['#text']);
 			try {
-				const newPalette = await extractPalette(track.image[3]['#text']);
+				const newPalette = await extractColorsFromImage(track.image[3]['#text']);
 				console.log('🎨 ColorThief extracted palette:', newPalette);
 				
 				if (newPalette && newPalette.length > 0) {
@@ -207,7 +77,7 @@
 						bgG = Math.max(20, Math.round(g * 0.3));
 						bgB = Math.max(20, Math.round(b * 0.3));
 					}
-					backgroundColor = rgbToHex(bgR, bgG, bgB); // Use rgbToHex
+					backgroundColor = rgbArrayToHex([bgR, bgG, bgB]); // Use utility function
 					colors = paletteToColors(newPalette);
 				} else if (initialColors && initialColors.length === 5) {
 					colors = initialColors; // Assuming initialColors are already HEX if provided
