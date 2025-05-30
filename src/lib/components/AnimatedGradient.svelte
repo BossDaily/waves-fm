@@ -6,83 +6,42 @@
 		colors: initialColors,
 		className,
 		track,
-		randomize = false
+		randomize = false // This prop seems unused currently, but let's keep it
 	}: {
 		colors?: [string, string, string, string, string];
 		className?: string;
 		track: any;
 		randomize?: boolean;
 	} = $props();
-
 	const defaultColors: [string, string, string, string, string] = [
-		'hsla(328, 64%, 68%, 1)',
-		'hsla(328, 84%, 92%, 1)',
-		'hsla(303, 73%, 68%, 1)',
-		'hsla(273, 58%, 78%, 1)',
-		'hsla(331, 80%, 52%, 1)'
+		'#CF72AE', // rgba(207, 114, 174, 1)
+		'#F4C4EA', // rgba(244, 196, 234, 1)
+		'#B76BC9', // rgba(183, 107, 201, 1)
+		'#A686DA', // rgba(166, 134, 218, 1)
+		'#C7439D'  // rgba(199, 67, 157, 1)
 	];
 	let colors = $state<[string, string, string, string, string]>(
-		initialColors || defaultColors	);
+		initialColors || defaultColors
+	);
 	let backgroundColor = $state<string>('');
 	let palette = $state<[number, number, number][] | null>(null);
 
-	const generateRandomHSLColor = () => {
-		const h = Math.floor(Math.random() * 360);
-		const s = Math.floor(Math.random() * 30) + 60; // 60-90%
-		const l = Math.floor(Math.random() * 30) + 60; // 60-90%
-		return `hsla(${h}, ${s}%, ${l}%, 1)`;
+	// Helper function to convert RGB to HEX
+	const rgbToHex = (r: number, g: number, b: number): string => {
+		return `#${[r, g, b].map(x => {
+			const hex = x.toString(16);
+			return hex.length === 1 ? '0' + hex : hex;
+		}).join('')}`;
 	};
 
-	const generateRandomColors = (): [string, string, string, string, string] => {
-		return Array.from({ length: 5 }, generateRandomHSLColor) as [string, string, string, string, string];
-	};
-
-	const rgbToHsla = (r: number, g: number, b: number): string => {
-		// Convert RGB to [0,1] range
-		r /= 255;
-		g /= 255;
-		b /= 255;
-
-		const max = Math.max(r, g, b);
-		const min = Math.min(r, g, b);
-		let h = 0;
-		let s = 0;
-		const l = (max + min) / 2;
-
-		if (max !== min) {
-			const d = max - min;
-			s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-			switch (max) {
-				case r:
-					h = (g - b) / d + (g < b ? 6 : 0);
-					break;
-				case g:
-					h = (b - r) / d + 2;
-					break;
-				case b:
-					h = (r - g) / d + 4;
-					break;
-			}
-
-			h /= 6;
-		}
-
-		// Convert to degrees and percentages
-		h = Math.round(h * 360);
-		s = Math.round(s * 100);
-		const l_percent = Math.round(l * 100);
-
-		return `hsla(${h}, ${s}%, ${l_percent}%, 1)`;
-	};	// Extract colors using ColorThief for better color analysis
+	// Replaced with logic from ColorDebug.svelte's extractColorsFromImage
 	async function extractPalette(imageUrl: string): Promise<[number, number, number][]> {
 		try {
-			console.log('🎨 Extracting palette using ColorThief from:', imageUrl);
+			console.log('🎨 Extracting palette using ColorDebug logic from:', imageUrl);
 			const startTime = performance.now();
 			
-			// Create image element and set up ColorThief
 			const img = new Image();
-			img.crossOrigin = 'Anonymous'; // Enable CORS for external images
+			img.crossOrigin = 'Anonymous'; 
 			
 			const colorThief = new ColorThief();
 			
@@ -90,211 +49,143 @@
 				img.onload = () => {
 					try {
 						const endTime = performance.now();
-						console.log(`⏱️ Image loaded in ${(endTime - startTime).toFixed(2)}ms`);
+						console.log(`⏱️ Image loaded in ${(endTime - startTime).toFixed(2)}ms (AnimatedGradient)`);
 						
-						// Extract 8 colors with good quality for better selection
-						const palette = colorThief.getPalette(img, 8, 1);
-						console.log('🎨 ColorThief extracted palette:', palette);
+						// Get the dominant color first
+						const dominantColor = colorThief.getColor(img, 10);
+						console.log('🎨 Dominant color (AnimatedGradient):', dominantColor);
 						
-						if (!palette || palette.length === 0) {
-							console.log('❌ No colors extracted by ColorThief, using fallback');
-							resolve([
-								[80, 120, 160],
-								[160, 80, 120], 
-								[120, 160, 80],
-								[140, 100, 180],
-								[180, 140, 100]
-							]);
-							return;
-						}
+						// Get palette of 5 colors with good quality
+						const palette = colorThief.getPalette(img, 5, 10);
+						console.log('🎨 ColorThief palette (AnimatedGradient):', palette);
 						
-						// Filter out colors that are too similar
-						const extractedColors: [number, number, number][] = [];
-						
-						for (const color of palette) {
-							const [r, g, b] = color;
+						if (palette && palette.length > 0) {
+							// Ensure we have the dominant color first, then the palette
+							const colorsToProcess: [number, number, number][] = [dominantColor as [number, number, number]];
 							
-							// Filter out colors that are too similar to already extracted ones
-							const isDuplicate = extractedColors.some(existing => {
+							// Add palette colors that aren't too similar to dominant
+							for (const color of palette) {
+								const [r, g, b] = color;
 								const distance = Math.sqrt(
-									Math.pow(r - existing[0], 2) +
-									Math.pow(g - existing[1], 2) +
-									Math.pow(b - existing[2], 2)
+									Math.pow(r - dominantColor[0], 2) +
+									Math.pow(g - dominantColor[1], 2) +
+									Math.pow(b - dominantColor[2], 2)
 								);
-								return distance < 50; // Minimum distance threshold
-							});
-							
-							if (!isDuplicate) {
-								console.log(`🌈 Color: RGB(${r}, ${g}, ${b})`);
-								extractedColors.push([r, g, b] as [number, number, number]);
+								
+								// Only add if sufficiently different (distance > 30)
+								if (distance > 30 && colorsToProcess.length < 5) {
+									colorsToProcess.push([r, g, b] as [number, number, number]);
+								}
 							}
-						}
-						
-						// If we don't have enough colors, add some enhanced variants
-						while (extractedColors.length < 5 && extractedColors.length > 0) {
-							const baseColor = extractedColors[extractedColors.length % extractedColors.length];
-							const variant = createColorVariant(baseColor);
-							extractedColors.push(variant);
-							console.log(`⚡ Added enhanced variant: RGB(${variant[0]}, ${variant[1]}, ${variant[2]})`);
-						}
-						
-						// Fallback if still no colors
-						if (extractedColors.length === 0) {
-							console.log('❌ No valid colors found, using fallback palette');
-							resolve([
-								[80, 120, 160],
-								[160, 80, 120],
-								[120, 160, 80],
-								[140, 100, 180],
-								[180, 140, 100]
-							]);
+							
+							// Fill remaining slots with variations if needed
+							while (colorsToProcess.length < 5 && colorsToProcess.length > 0) { // ensure colorsToProcess is not empty
+								const baseColor = colorsToProcess[0]; // Use dominant color for variations
+								const variation: [number, number, number] = [
+									Math.min(255, Math.max(0, Math.round(baseColor[0] + (Math.random() - 0.5) * 50))),
+									Math.min(255, Math.max(0, Math.round(baseColor[1] + (Math.random() - 0.5) * 50))),
+									Math.min(255, Math.max(0, Math.round(baseColor[2] + (Math.random() - 0.5) * 50)))
+								];
+								// Ensure variant is not too similar to existing colors before pushing
+								const isDuplicateVariant = colorsToProcess.some(existing => {
+									const dist = Math.sqrt(
+										Math.pow(variation[0] - existing[0], 2) +
+										Math.pow(variation[1] - existing[1], 2) +
+										Math.pow(variation[2] - existing[2], 2)
+									);
+									return dist < 30; // Use a threshold for variants too
+								});
+								if (!isDuplicateVariant) {
+									colorsToProcess.push(variation);
+								} else {
+									// If variant is duplicate, break to avoid infinite loop if all possible variations are too similar
+									// or try a different variation strategy if complex logic is desired.
+									// For now, just log and break if we can't easily find a distinct variant.
+									console.log("Could not generate a distinct variant, using current set.");
+									break;
+								}
+							}						
+							resolve(colorsToProcess.slice(0, 5));
+						} else if (dominantColor) {
+							// Fallback to just dominant color if palette is empty, and generate variations
+							const colorsToProcess: [number, number, number][] = [dominantColor as [number, number, number]];
+							while (colorsToProcess.length < 5) {
+								const baseColor = colorsToProcess[0];
+								const variation: [number, number, number] = [
+									Math.min(255, Math.max(0, Math.round(baseColor[0] + (Math.random() - 0.5) * 50))),
+									Math.min(255, Math.max(0, Math.round(baseColor[1] + (Math.random() - 0.5) * 50))),
+									Math.min(255, Math.max(0, Math.round(baseColor[2] + (Math.random() - 0.5) * 50)))
+								];
+								const isDuplicateVariant = colorsToProcess.some(existing => {
+									const dist = Math.sqrt(
+										Math.pow(variation[0] - existing[0], 2) +
+										Math.pow(variation[1] - existing[1], 2) +
+										Math.pow(variation[2] - existing[2], 2)
+									);
+									return dist < 30;
+								});
+								if (!isDuplicateVariant) {
+									colorsToProcess.push(variation);
+								} else {
+									console.log("Could not generate a distinct variant for dominant-only, using current set.");
+									break; 
+								}
+							}
+							resolve(colorsToProcess.slice(0,5));
+						} else {
+							console.log('❌ No dominant color or palette extracted by ColorThief (AnimatedGradient).');
+							resolve([]); 
 							return;
 						}
-						
-						console.log(`🎯 Successfully extracted ${extractedColors.length} colors using ColorThief`);
-						resolve(extractedColors.slice(0, 5)); // Ensure we return exactly 5 colors max
-						
 					} catch (error) {
-						console.error('💥 ColorThief processing failed:', error);
+						console.error('💥 ColorThief processing failed (AnimatedGradient):', error);
 						reject(error);
 					}
 				};
 				
 				img.onerror = (error) => {
-					console.error('💥 Image loading failed:', error);
+					console.error('💥 Image loading failed (AnimatedGradient):', error);
 					reject(error);
 				};
 				
-				// Set image source to start loading
 				img.src = imageUrl;
 			});
 			
 		} catch (error) {
-			console.error('💥 ColorThief extraction failed:', error);
-			// Fallback to a nice default palette
-			return [
-				[80, 120, 160],
-				[160, 80, 120],
-				[120, 160, 80], 
-				[140, 100, 180],
-				[180, 140, 100]
-			];
+			console.error('💥 ColorThief extraction failed (AnimatedGradient):', error);
+			return [];
 		}
 	}
-	// Create enhanced color variants using HSL manipulation
-	function createColorVariant([r, g, b]: [number, number, number]): [number, number, number] {
-		// Convert RGB to HSL for easier manipulation
-		const hsl = rgbToHsl(r, g, b);
-		
-		// Apply harmonic color theory shifts for pleasing variants
-		const harmonicShifts = [30, 45, 60, 90, 120]; // Musical intervals
-		const shift = harmonicShifts[Math.floor(Math.random() * harmonicShifts.length)];
-		
-		hsl[0] = (hsl[0] + shift) % 360; // Shift hue
-		hsl[1] = Math.min(90, Math.max(30, hsl[1] + (Math.random() - 0.5) * 20)); // Vary saturation
-		hsl[2] = Math.min(80, Math.max(25, hsl[2] + (Math.random() - 0.5) * 15)); // Vary lightness
-		
-		return hslToRgb(hsl[0], hsl[1], hsl[2]);
-	}
-
-	// Convert RGB to HSL
-	function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
-		r /= 255;
-		g /= 255;
-		b /= 255;
-
-		const max = Math.max(r, g, b);
-		const min = Math.min(r, g, b);
-		let h = 0;
-		let s = 0;
-		const l = (max + min) / 2;
-
-		if (max !== min) {
-			const d = max - min;
-			s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-			switch (max) {
-				case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-				case g: h = (b - r) / d + 2; break;
-				case b: h = (r - g) / d + 4; break;
-			}
-			h /= 6;
-		}
-
-		return [h * 360, s * 100, l * 100];
-	}
-
-	// Convert HSL to RGB  
-	function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-		h /= 360;
-		s /= 100;
-		l /= 100;
-
-		const hue2rgb = (p: number, q: number, t: number) => {
-			if (t < 0) t += 1;
-			if (t > 1) t -= 1;
-			if (t < 1/6) return p + (q - p) * 6 * t;
-			if (t < 1/2) return q;
-			if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-			return p;
-		};
-
-		const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-		const p = 2 * l - q;
-
-		const r = hue2rgb(p, q, h + 1/3);
-		const g = hue2rgb(p, q, h);
-		const b = hue2rgb(p, q, h - 1/3);
-
-		return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-	}
-	// Enhanced helper to convert ColorThief palette to gradient colors
+	// Simplified helper to convert raw ColorThief palette to HEX strings
 	function paletteToColors(palette: [number, number, number][] | null): [string, string, string, string, string] {
-		console.log('🎨 Converting ColorThief palette to gradient colors:', palette);
+		console.log('🎨 Converting raw palette to HEX strings:', palette);
 		
 		if (!palette || palette.length === 0) {
-			console.log('❌ No palette provided, generating random colors');
-			const randomColors = generateRandomColors();
-			console.log('🎲 Generated random colors:', randomColors);
-			return randomColors;
+			console.log('❌ No palette provided to paletteToColors, returning empty array for colors.');
+			return [] as unknown as [string, string, string, string, string]; 
 		}
 
-		console.log('✅ Processing ColorThief palette with', palette.length, 'colors');
+		const filledPalette = [...palette];
+		// Ensure 5 colors by repeating the last one if necessary
+		while (filledPalette.length > 0 && filledPalette.length < 5) {
+			filledPalette.push(filledPalette[filledPalette.length - 1]);
+		}
 		
-		// ColorThief gives us good colors, but let's enhance them for gradients
-		const enhancedColors = palette.map(([r, g, b], index) => {
-			const hsl = rgbToHsl(r, g, b);
-			
-			// Enhance for gradient visibility
-			hsl[1] = Math.min(85, Math.max(35, hsl[1] * 1.15)); // Boost saturation slightly
-			hsl[2] = Math.max(30, Math.min(80, hsl[2])); // Ensure good lightness range
-			
-			const enhanced = hslToRgb(hsl[0], hsl[1], hsl[2]);
-			console.log(`🌈 Enhanced color ${index}: RGB(${r}, ${g}, ${b}) → RGB(${enhanced[0]}, ${enhanced[1]}, ${enhanced[2]})`);
-			return enhanced;
-		});
-
-		// Ensure we have exactly 5 colors
-		const finalColors = [...enhancedColors];
-		while (finalColors.length < 5) {
-			const baseColor = finalColors[finalColors.length % finalColors.length];
-			const variant = createColorVariant(baseColor);
-			finalColors.push(variant);
-			console.log(`⚡ Added color variant: RGB(${variant[0]}, ${variant[1]}, ${variant[2]})`);
+		if (filledPalette.length === 0) {
+			return [] as unknown as [string, string, string, string, string];
 		}
 
-		// Convert to HSLA strings
-		const hslaColors = finalColors.slice(0, 5).map(([r, g, b]) => {
-			const hslaColor = rgbToHsla(r, g, b);
-			console.log(`🎊 RGB(${r}, ${g}, ${b}) → HSLA ${hslaColor}`);
-			return hslaColor;
+		const hexColors = filledPalette.slice(0, 5).map(([r, g, b]) => {
+			return rgbToHex(r, g, b); // Use rgbToHex
 		}) as [string, string, string, string, string];
 
-		console.log('🎉 Final ColorThief-based gradient colors:', hslaColors);
-		return hslaColors;
-	}	// Extract palette and update colors when track changes
+		console.log('🎉 Final raw HEX gradient colors:', hexColors);
+		return hexColors;
+	}
+
+	// Extract palette and update colors when track changes
 	async function updateColorsFromTrack() {
-		console.log('🚀 Updating colors for track:', track?.name, 'by', track?.artist?.['#text']);
+		console.log('🚀 Updating colors for track:', track?.name, 'by', track?.artist?.["#text"]);
 		
 		if (track?.image?.[3]?.['#text']) {
 			console.log('🖼️ Extracting palette from image using ColorThief:', track.image[3]['#text']);
@@ -303,41 +194,43 @@
 				console.log('🎨 ColorThief extracted palette:', newPalette);
 				
 				if (newPalette && newPalette.length > 0) {
-					console.log('🎯 Using ColorThief palette with', newPalette.length, 'colors');
 					palette = newPalette;
-					
-					// Use the first (dominant) color as background with reduced opacity
 					const [r, g, b] = newPalette[0] as [number, number, number];
-					const hsl = rgbToHsl(r, g, b);
-					// Make background color darker and less saturated for better contrast
-					hsl[1] = Math.max(20, hsl[1] * 0.6); // Reduce saturation
-					hsl[2] = Math.max(15, hsl[2] * 0.4); // Make much darker
-					const [bgR, bgG, bgB] = hslToRgb(hsl[0], hsl[1], hsl[2]);
-					const bgColor = rgbToHsla(bgR, bgG, bgB);
-					
-					console.log(`🏠 Background color: Original RGB(${r}, ${g}, ${b}) → Adjusted RGB(${bgR}, ${bgG}, ${bgB}) → HSLA ${bgColor}`);
-					backgroundColor = bgColor;
-					colors = paletteToColors(newPalette);
-				} else {
-					console.log('❌ ColorThief extraction returned empty result');
-					if (randomize) {
-						console.log('🎲 Falling back to random colors');
-						colors = generateRandomColors();
+					const brightness = (r + g + b) / 3;
+					let bgR, bgG, bgB;
+					if (brightness < 60) {
+						bgR = Math.max(5, Math.round(r * 0.6));
+						bgG = Math.max(5, Math.round(g * 0.6));
+						bgB = Math.max(5, Math.round(b * 0.6));
+					} else {
+						bgR = Math.max(20, Math.round(r * 0.3));
+						bgG = Math.max(20, Math.round(g * 0.3));
+						bgB = Math.max(20, Math.round(b * 0.3));
 					}
+					backgroundColor = rgbToHex(bgR, bgG, bgB); // Use rgbToHex
+					colors = paletteToColors(newPalette);
+				} else if (initialColors && initialColors.length === 5) {
+					colors = initialColors; // Assuming initialColors are already HEX if provided
+					backgroundColor = '';
+				} else {
+					colors = defaultColors;
+					backgroundColor = '';
 				}
 			} catch (error) {
 				console.error('💥 Failed to extract palette with ColorThief:', error);
-				if (randomize) {
-					console.log('🎲 Falling back to random colors');
-					colors = generateRandomColors();
+				if (initialColors && initialColors.length === 5) {
+					colors = initialColors;
+					backgroundColor = '';
+				} else {
+					colors = defaultColors;
+					backgroundColor = '';
 				}
 			}
-		} else if (randomize) {
-			console.log('🎲 No image URL, generating random colors');
-			colors = generateRandomColors();
+		} else if (initialColors && initialColors.length === 5) {
+			colors = initialColors;
+			backgroundColor = '';
 		} else {
-			console.log('🎨 Using default colors');
-			colors = initialColors || defaultColors;
+			colors = defaultColors;
 			backgroundColor = '';
 		}
 	}	onMount(() => {
@@ -352,34 +245,19 @@
 		}
 	});
 
-	// Create properly formatted gradient style
-	const gradientStyle = $derived(() => {
-		const backgroundImage = [
-			`radial-gradient(circle at var(--x-0, 40%) var(--y-0, 20%), ${colors[0]} var(--s-start-0, 0%), transparent var(--s-end-0, 50%))`,
-			`radial-gradient(circle at var(--x-1, 80%) var(--y-1, 0%), ${colors[1]} var(--s-start-1, 0%), transparent var(--s-end-1, 50%))`,
-			`radial-gradient(circle at var(--x-2, 0%) var(--y-2, 50%), ${colors[2]} var(--s-start-2, 0%), transparent var(--s-end-2, 50%))`,
-			`radial-gradient(circle at var(--x-3, 80%) var(--y-3, 50%), ${colors[3]} var(--s-start-3, 0%), transparent var(--s-end-3, 50%))`,
-			`radial-gradient(circle at var(--x-4, 0%) var(--y-4, 100%), ${colors[4]} var(--s-start-4, 0%), transparent var(--s-end-4, 50%))`
-		].join(', ');
-
-		return {
-			backgroundColor,
-			backgroundImage
-		};
-	});	// Enhanced debug logging
+	// Enhanced debug logging
 	$effect(() => {
 		console.group('🎨 AnimatedGradient State Update');
-		console.log('🌈 Current colors:', colors);
+		console.log('🌈 Current colors (for CSS variables --c-0 to --c-4):', colors);
 		console.log('🏠 Background color:', backgroundColor);
-		console.log('🎯 Raw palette:', palette);
-		console.log('🎨 Generated gradient style:', gradientStyle());
+		console.log('🎯 Raw palette (RGB):', palette);
 		console.groupEnd();
 	});
 </script>
 
 <div 
 	class="gradient-container {className || ''}"
-	style="background-color: {backgroundColor}; background-image: {gradientStyle().backgroundImage};"
+	style="background-color: {backgroundColor}; --c-0: {colors[0]}; --c-1: {colors[1]}; --c-2: {colors[2]}; --c-3: {colors[3]}; --c-4: {colors[4]};"
 	data-colors="{JSON.stringify(colors)}"
 	data-background="{backgroundColor}"
 ></div>
@@ -392,20 +270,13 @@
 		top: 0;
 		left: 0;
 		z-index: 1;
+		background-image: 
+			radial-gradient(circle at var(--x-0, 40%) var(--y-0, 20%), var(--c-0) var(--s-start-0, 0%), transparent var(--s-end-0, 50%)),
+			radial-gradient(circle at var(--x-1, 80%) var(--y-1, 0%), var(--c-1) var(--s-start-1, 0%), transparent var(--s-end-1, 50%)),
+			radial-gradient(circle at var(--x-2, 0%) var(--y-2, 50%), var(--c-2) var(--s-start-2, 0%), transparent var(--s-end-2, 50%)),
+			radial-gradient(circle at var(--x-3, 80%) var(--y-3, 50%), var(--c-3) var(--s-start-3, 0%), transparent var(--s-end-3, 50%)),
+			radial-gradient(circle at var(--x-4, 0%) var(--y-4, 100%), var(--c-4) var(--s-start-4, 0%), transparent var(--s-end-4, 50%));
 		background-blend-mode: normal, normal, normal, normal, normal;
 		animation: hero-gradient-animation 15s linear infinite alternate;
-	}
-	
-	/* Test styles to ensure visibility */
-	.gradient-container::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #f0932b);
-		opacity: 0.3;
-		z-index: -1;
 	}
 </style>
