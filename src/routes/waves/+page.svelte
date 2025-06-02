@@ -1,12 +1,14 @@
 <script lang="ts">
 	import CanvasGradient from "$lib/components/CanvasGradient.svelte";
 	import ColorDebug from "$lib/components/ColorDebug.svelte";
+	import LinkGuard from "$lib/components/LinkGuard.svelte";
 	import type { PageData } from "./$types.js";
 	import { onMount } from "svelte";
 
 	let { data }: { data: PageData } = $props();
 	let currentTrack = $state(data.track);
 	let showColorDebug = $state(false);
+	let showLinkGuard = $state(false);
 
 	async function fetchCurrentTrack() {
 		try {
@@ -28,11 +30,13 @@
 			console.error("Error fetching current track:", error);
 		}
 	}
-
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key.toLowerCase() === 'd') {
 			showColorDebug = !showColorDebug;
 			console.log('🎨 Color debug toggled:', showColorDebug);
+		} else if (event.key.toLowerCase() === 'l') {
+			showLinkGuard = !showLinkGuard;
+			console.log('🛡️ Link guard debug toggled:', showLinkGuard);
 		}
 	}
 
@@ -65,4 +69,7 @@
 			<ColorDebug track={currentTrack} />
 		</div>
 	{/if}
+
+	<!-- Link Guard Component -->
+	<LinkGuard showLogs={showLinkGuard} />
 </main>
