@@ -1,12 +1,11 @@
 <script lang="ts">	import { onMount, onDestroy } from "svelte";
 	import * as NEAT from "@firecms/neat";
-	const { NeatGradient } = NEAT;
-	import { 
+	const { NeatGradient } = NEAT;	import { 
 		getRandomHexColor, 
 		rgbToHex,
 		hashString,
 		getParameterFromHash,
-		extractPaletteFromCanvas 
+		extractColorsFromImage 
 	} from "$lib/utils.js";
 
 	let {
@@ -46,6 +45,8 @@
 					enabled: true
 				}));
 
+		//console.log('Colors for gradient:', palette, colors);
+
 		// Clean up previous gradient
 		if (gradientRef) {
 			gradientRef.destroy();
@@ -75,7 +76,7 @@
 		// Extract color palette from album artwork
 		if (track?.image[3]['#text']) {
 			try {
-				palette = await extractPaletteFromCanvas(track.image[3]['#text']);
+				palette = await extractColorsFromImage(track.image[3]['#text']);
 			} catch (error) {
 				console.error('Failed to extract palette:', error);
 				palette = null;
@@ -94,13 +95,13 @@
 		if (palette !== null) {
 			initializeGradient();
 		}
-	});
-	// Re-extract palette and re-initialize gradient when track changes
+	});	// Re-extract palette and re-initialize gradient when track changes
 	$effect(() => {
 		if (track?.image[3]['#text']) {
 			(async () => {
 				try {
-					palette = await extractPaletteFromCanvas(track.image[3]['#text']);
+					console.log('Extracting palette for track:', track.name, 'url:', track.image[3]['#text']);	
+					palette = await extractColorsFromImage(track.image[3]['#text']);
 				} catch (error) {
 					console.error('Failed to extract palette:', error);
 					palette = null;
