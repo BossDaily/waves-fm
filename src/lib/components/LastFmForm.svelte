@@ -1,10 +1,9 @@
-<script lang="ts">
-	import { goto } from '$app/navigation';
+<script lang="ts">	import { goto } from '$app/navigation';
 	import { lastFmFormSchema, type LastFmFormValues } from '$lib/schemas.js';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Input from '$lib/components/ui/Input.svelte';
-	import Label from '$lib/components/ui/Label.svelte';
-	import Switch from '$lib/components/ui/Switch.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Switch } from '$lib/components/ui/switch';
 
 	let formData: LastFmFormValues = {
 		apiKey: '',
