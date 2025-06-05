@@ -1,0 +1,169 @@
+@keyframes hero-gradient-animation {
+  0% {
+      --s-start-0: 0%;
+      --s-end-0: 50%;
+      --x-0: 40%;
+      --y-0: 20%;
+      --s-start-1: 0%;
+      --s-end-1: 50%;
+      --y-1: 0%;
+      --x-1: 80%;
+      --s-start-2: 0%;
+      --s-end-2: 50%;
+      --x-2: 0%;
+      --y-2: 50%;
+      --x-3: 80%; 
+      --s-start-3: 0%;
+      --s-end-3: 50%;
+      --y-3: 50%;
+      --x-4: 0%;
+      --s-start-4: 0%;
+      --s-end-4: 50%;
+      --y-4: 100%;
+  }
+
+  100% {
+      --s-start-0: 1%; /* Adjusted from 1 to 1% for valid CSS */
+      --s-end-0: 70%;  /* Adjusted from 70 to 70% for valid CSS */
+      --x-0: 1%;
+      --y-0: 94%;
+      --s-start-1: 1%; /* Adjusted from 1 to 1% for valid CSS */
+      --s-end-1: 70%;  /* Adjusted from 70 to 70% for valid CSS */
+      --y-1: 57%;
+      --x-1: 86%;
+      --s-start-2: 1%; /* Adjusted from 1 to 1% for valid CSS */
+      --s-end-2: 70%;  /* Adjusted from 70 to 70% for valid CSS */
+      --x-2: 74%;
+      --y-2: 1%;
+      --x-3: 87%; 
+      --s-start-3: 1%; /* Adjusted from 1 to 1% for valid CSS */
+      --s-end-3: 70%;  /* Adjusted from 70 to 70% for valid CSS */
+      --y-3: 54%;
+      --x-4: 64%;
+      --s-start-4: 1%; /* Adjusted from 1 to 1% for valid CSS */
+      --s-end-4: 70%;  /* Adjusted from 70 to 70% for valid CSS */
+      --y-4: 35%;
+  }
+}
+
+@property --s-start-0 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%
+}
+
+@property --s-end-0 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%
+}
+
+@property --x-0 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 40%
+}
+
+@property --y-0 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 20%
+}
+
+@property --s-start-1 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%
+}
+
+@property --s-end-1 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%
+}
+
+@property --y-1 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%
+}
+
+@property --x-1 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 80%
+}
+
+@property --s-start-2 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%
+}
+
+@property --s-end-2 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%
+}
+
+@property --x-2 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%
+}
+
+@property --y-2 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%
+}
+
+@property --x-3 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 80%
+}
+
+@property --s-start-3 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%
+}
+
+@property --s-end-3 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%
+}
+
+@property --y-3 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%
+}
+
+@property --x-4 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%
+}
+
+@property --s-start-4 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%
+}
+
+@property --s-end-4 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%
+}
+
+@property --y-4 {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 100%
+}
+
+/* Removed conflicting .gradient-container styles to allow Svelte component styles to take precedence */
