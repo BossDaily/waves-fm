@@ -1,6 +1,7 @@
 # Waves.FM <img src="https://wallpaper.bossdaily.dev/api/favicon?c1=%23e4a853&c2=%23f45d87&c3=%2342d9e8&c4=%237b2fd1&c5=%23ff9b4a" width="36" height="36" />
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.1.4-black?style=flat-square)](https://nextjs.org/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-2.0-orange?style=flat-square)](https://kit.svelte.dev/)
+[![Svelte](https://img.shields.io/badge/Svelte-5.0-red?style=flat-square)](https://svelte.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
@@ -18,7 +19,7 @@ Generate beautiful animated wave visualizations from your Last.fm scrobbles in r
   - Optimized performance mode for smoother animations
 - 🌗 Adaptive favicon that matches your current track
 - 📱 Fully responsive design
-- 🚀 Built with Next.js 15 and TypeScript
+- 🚀 Built with SvelteKit 2 and Svelte 5
 
 ## 🚀 Getting Started
 
@@ -43,8 +44,8 @@ npm install
 
 3. Create a `.env` file in the root directory:
 ```env
-NEXT_PUBLIC_LASTFM="your_lastfm_api_key"
-NEXT_PUBLIC_LASTFM_USERS="your_lastfm_username"
+LASTFM_API_KEY="your_lastfm_api_key"
+LASTFM_USERNAME="your_lastfm_username"
 ```
 
 4. Start the development server:
@@ -52,7 +53,7 @@ NEXT_PUBLIC_LASTFM_USERS="your_lastfm_username"
 npm run dev
 ```
 
-Visit `http://localhost:3000` to see your visualization!
+Visit `http://localhost:5173` to see your visualization!
 
 ## 🎨 Usage
 
@@ -65,21 +66,21 @@ Note, you can just go to `/optimized-waves` or `/waves` to see the visualizer di
 
 ## 🛠️ Technologies
 
-- [Next.js](https://nextjs.org/)
+- [SvelteKit](https://kit.svelte.dev/)
+- [Svelte 5](https://svelte.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Neat](https://github.com/firecmsco/neat) (for the waves)
-- [MSHR](https://www.mshr.app/)
 - [Last.fm API](https://www.last.fm/api)
-- [Node Vibrant](https://github.com/Vibrant-Colors/node-vibrant)
-- [React Hook Form](https://react-hook-form.com/)
+- [Bits UI](https://github.com/huntabyte/bits-ui)
+- [ColorThief](https://lokeshdhakar.com/projects/color-thief/)
 
 ## 📝 Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `NEXT_PUBLIC_LASTFM` | Your Last.fm API key | Yes |
-| `NEXT_PUBLIC_LASTFM_USERS` | Default Last.fm username(s) | No |
+| `LASTFM_API_KEY` | Your Last.fm API key | Yes |
+| `LASTFM_USERNAME` | Default Last.fm username | No |
 
 ## 🤝 Contributing
 
@@ -92,9 +93,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - Last.fm for their excellent API
-- The Next.js team for the amazing framework
+- The SvelteKit team for the amazing framework
 - All contributors and users of this project
 
 ---
 
-Made with ❤️ using Next.js and the Last.FM API 
+Made with ❤️ using SvelteKit and the Last.FM API 
