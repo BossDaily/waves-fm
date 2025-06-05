@@ -26,10 +26,9 @@
 		waveOpacity?: number;
 		[key: string]: any;
 	} = $props();
-
 	let canvasRef: HTMLCanvasElement;
 	let animationId: number;
-	let isSafari = false;
+	let isSafari = $state(false);
 
 	const noise = createNoise3D();
 	let w: number, h: number, nt: number, i: number, x: number, ctx: any, canvas: any;
