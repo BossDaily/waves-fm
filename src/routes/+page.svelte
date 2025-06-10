@@ -115,17 +115,6 @@
 
 		<!-- Enhanced bottom info with additional features -->
 		<div class="mt-12 text-center space-y-3">
-			<div class="flex justify-center space-x-6 text-gray-200 dark:text-gray-300 text-sm">
-				<span class="flex items-center">
-					🌴 Palm Trees
-				</span>
-				<span class="flex items-center">
-					🕹️ Arcade Vibes
-				</span>
-				<span class="flex items-center">
-					🎶 Synth Beats
-				</span>
-			</div>
 			<p class="text-gray-200 dark:text-gray-300 text-sm">
 				Crafted with <span class="text-pink-300 dark:text-pink-200">SvelteKit</span> & the <span class="text-cyan-300 dark:text-cyan-200">Last.fm API</span>
 			</p>
