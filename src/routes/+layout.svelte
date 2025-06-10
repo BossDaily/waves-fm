@@ -15,6 +15,6 @@
 	});
 </script>
 
-<main class="h-full">
+<main class="h-full min-h-screen">
 	{@render children()}
 </main>
