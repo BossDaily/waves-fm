@@ -28,14 +28,14 @@
 <!-- Hero Section with Glassmorphic Design -->
 <div class="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
 	<!-- Animated Background -->
-	<WavyBackground
+	<!-- <WavyBackground
 		className="absolute inset-0 w-full opacity-60"
 		{colors}
 	>
 		{#snippet children()}
 			<div class="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-blue-900/20 to-teal-900/30"></div>
 		{/snippet}
-	</WavyBackground>
+	</WavyBackground> -->
 
 	<!-- Floating orbs for extra ambiance -->
 	<div class="absolute inset-0 overflow-hidden pointer-events-none">
