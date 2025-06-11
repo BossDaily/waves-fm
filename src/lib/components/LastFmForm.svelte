@@ -55,7 +55,7 @@
 		/>
 		<p class="text-[0.8rem] text-gray-300 dark:text-gray-400 flex items-center">
 			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5 text-cyan-400 dark:text-cyan-300"><path d="M15 6v12a3 3 0 1 0 0-6H9a3 3 0 1 0 0 6V6a3 3 0 1 0 0-6H9a3 3 0 1 0 0 6V6"/><path d="M9 18V5l12-2v13"/></svg>
-			Get your API key from <a href="https://last.fm/api" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline ml-1 dark:text-cyan-300 dark:hover:text-cyan-200">last.fm/api</a>
+			Guide on how to get your api key <a href="https://github.com/BossDaily/waves-fm/wiki#getting-started" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline ml-1 dark:text-cyan-300 dark:hover:text-cyan-200">last.fm/api</a>
 		</p>
 		{#if errors.apiKey}
 			<p class="text-[0.8rem] font-medium text-red-400 dark:text-red-300 flex items-center">
